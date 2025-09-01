@@ -1,14 +1,9 @@
 // Firebase config
 const firebaseConfig = {
-      apiKey: "AIzaSyDR8_kXFXR_oWGNptZX_infNrWTm3xbPAM",
-      authDomain: "timeline-43aac.firebaseapp.com",
-      projectId: "timeline-43aac",
-      storageBucket: "timeline-43aac.firebasestorage.app",
-      messagingSenderId: "732658035286",
-      appId: "1:732658035286:web:40091d26eee343579aa9f7",
-    };
-
-
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_AUTH_DOMAIN",
+  projectId: "YOUR_PROJECT_ID"
+};
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
@@ -23,6 +18,31 @@ const daysCount = 15 + 23;
 const months = ["Tháng 8", "Tháng 9"];
 const weekdays = ["CN", "Th2", "Th3", "Th4", "Th5", "Th6", "Th7"];
 const dates = [...Array(daysCount)].map((_, i) => (i < 15 ? 17 + i : i - 15 + 1));
+
+// Hàm tính thời gian còn lại đẹp
+function getTimeRemaining(endTime) {
+  const now = new Date();
+  const end = new Date(endTime);
+  let diff = end - now;
+  if (diff <= 0) return "Đã kết thúc";
+  let months = Math.floor(diff / (1000 * 60 * 60 * 24 * 30));
+  diff -= months * (1000 * 60 * 60 * 24 * 30);
+  let days = Math.floor(diff / (1000 * 60 * 60 * 24));
+  diff -= days * (1000 * 60 * 60 * 24);
+  let hours = Math.floor(diff / (1000 * 60 * 60));
+  diff -= hours * (1000 * 60 * 60);
+  let minutes = Math.floor(diff / (1000 * 60));
+  diff -= minutes * (1000 * 60);
+  let seconds = Math.floor(diff / 1000);
+
+  let parts = [];
+  if (months > 0) parts.push(months + " tháng");
+  if (days > 0) parts.push(days + " ngày");
+  if (hours > 0) parts.push(hours + " giờ");
+  if (minutes > 0) parts.push(minutes + " phút");
+  parts.push(seconds + " giây");
+  return parts.join(" ");
+}
 
 // Hàm render timeline 5 dòng
 function renderTimeline(events) {
@@ -63,23 +83,20 @@ function renderTimeline(events) {
     const currentTimeLabel = `${currentHour}:${currentMinute}:${currentSecond}`;
     const currentDateIdx = getDateIndexFromDate(now.toISOString());
 
-    // Row chứa label và đường chỉ dọc
     const currentTimeRow = document.createElement('div');
     currentTimeRow.className = "timeline-row current-time-row";
     currentTimeRow.style.position = "relative";
     currentTimeRow.style.height = "32px";
     currentTimeRow.style.marginBottom = "4px";
 
-    // Label giờ hiện tại
-    currentTimeRow.innerHTML += `<span class="current-time-label" style="position:absolute;left:${currentDateIdx * 40 - 15}px;top:0;">${currentTimeLabel}</span>
-      <div class="current-time-line" style="position:absolute;left:${currentDateIdx * 40}px;top:20px;width:2px;height:120px;background:#fff;z-index:10;"></div>`;
-    // Xóa dòng 4 cũ trước khi thêm mới (chỉ giữ đúng 5 dòng)
+    currentTimeRow.innerHTML = `<span class="current-time-label" style="left:${currentDateIdx * 40 - 15}px;top:0;">${currentTimeLabel}</span>
+      <div class="current-time-line" style="left:${currentDateIdx * 40}px;top:20px;"></div>`;
     const oldRow = timeline.querySelector('.current-time-row');
     if (oldRow) timeline.removeChild(oldRow);
     timeline.appendChild(currentTimeRow);
   }
   renderCurrentTimeBar();
-  // Tự động cập nhật giờ hiện tại mỗi giây
+  // Cập nhật giờ mỗi giây
   if (window.__timelineTimer) clearInterval(window.__timelineTimer);
   window.__timelineTimer = setInterval(renderCurrentTimeBar, 1000);
 
@@ -90,6 +107,9 @@ function renderTimeline(events) {
   });
   events.sort((a, b) => a.remaining - b.remaining);
 
+  // Xóa tooltip cũ nếu có
+  document.querySelectorAll('.event-tooltip').forEach(el => el.remove());
+
   events.forEach((ev, idx) => {
     const startIdx = getDateIndexFromDate(ev.startTime);
     const endIdx = getDateIndexFromDate(ev.endTime);
@@ -97,7 +117,7 @@ function renderTimeline(events) {
     const bar = document.createElement('div');
     bar.className = `event-bar ${ev.color}`;
     bar.style.position = "absolute";
-    bar.style.top = (168 + idx * 44) + "px"; // 4 dòng phía trên cao ~168px
+    bar.style.top = (168 + idx * 44) + "px";
     bar.style.left = (startIdx * 40) + "px";
     bar.style.width = width + "px";
     // Hiển thị ngày giờ
@@ -106,6 +126,24 @@ function renderTimeline(events) {
     bar.innerHTML = `${ev.name} <span style="margin-left:8px;">${ev.duration}d</span>
       <span style="margin-left:8px;font-size:0.9em;">${startTimeShow} - ${endTimeShow}</span>
       <button class="delete-btn" onclick="deleteEvent('${ev.id}')">Xóa</button>`;
+
+    // Tạo tooltip
+    const tooltip = document.createElement('div');
+    tooltip.className = "event-tooltip";
+    tooltip.style.display = "none";
+    tooltip.innerText = "Còn lại: " + getTimeRemaining(ev.endTime);
+    document.body.appendChild(tooltip);
+
+    bar.onmousemove = function(e) {
+      tooltip.innerText = "Còn lại: " + getTimeRemaining(ev.endTime);
+      tooltip.style.left = (e.pageX + 12) + "px";
+      tooltip.style.top = (e.pageY - 10) + "px";
+      tooltip.style.display = "block";
+    };
+    bar.onmouseleave = function() {
+      tooltip.style.display = "none";
+    };
+
     timeline.appendChild(bar);
   });
 }
