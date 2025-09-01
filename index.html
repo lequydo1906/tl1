@@ -1,33 +1,14 @@
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-  <meta charset="UTF-8">
-  <title>Dòng thời gian sự kiện</title>
-  <link rel="stylesheet" href="style.css">
-  <!-- Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore-compat.js"></script>
-</head>
-<body>
-  <h1>Dòng thời gian sự kiện</h1>
-  <form id="eventForm">
-    <input type="text" id="name" placeholder="Tên sự kiện" required>
-    <input type="number" id="startMonth" min="8" max="9" value="9" required>
-    <input type="number" id="startDay" min="1" max="31" value="2" required>
-    <input type="number" id="endMonth" min="8" max="9" value="9" required>
-    <input type="number" id="endDay" min="1" max="31" value="17" required>
-    <input type="number" id="duration" min="1" value="15" required>
-    <select id="color">
-      <option value="red">Đỏ</option>
-      <option value="yellow">Vàng</option>
-      <option value="gray">Xám</option>
-      <option value="pink">Hồng</option>
-      <option value="blue">Xanh dương</option>
-      <option value="indigo">Xanh tím</option>
-    </select>
-    <button type="submit">Thêm sự kiện</button>
-  </form>
-  <div id="timeline"></div>
-  <script src="script.js"></script>
-</body>
-</html>
+<form id="eventForm">
+  <input type="text" id="name" placeholder="Tên sự kiện" required>
+  <input type="datetime-local" id="startTime" required>
+  <input type="datetime-local" id="endTime" required>
+  <select id="color">
+    <option value="red">Đỏ</option>
+    <option value="yellow">Vàng</option>
+    <option value="gray">Xám</option>
+    <option value="pink">Hồng</option>
+    <option value="blue">Xanh dương</option>
+    <option value="indigo">Xanh tím</option>
+  </select>
+  <button type="submit">Thêm sự kiện</button>
+</form>
