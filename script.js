@@ -1,9 +1,12 @@
 // Firebase config
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_AUTH_DOMAIN",
-  projectId: "YOUR_PROJECT_ID"
-};
+      apiKey: "AIzaSyDR8_kXFXR_oWGNptZX_infNrWTm3xbPAM",
+      authDomain: "timeline-43aac.firebaseapp.com",
+      projectId: "timeline-43aac",
+      storageBucket: "timeline-43aac.firebasestorage.app",
+      messagingSenderId: "732658035286",
+      appId: "1:732658035286:web:40091d26eee343579aa9f7",
+    };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
