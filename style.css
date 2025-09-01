@@ -1,17 +1,23 @@
 body { background: #111; color: #fff; font-family: Arial, sans-serif; }
 h1 { font-size: 2em; margin: 20px; }
 form { margin: 20px; display: flex; gap: 8px; flex-wrap: wrap; }
-#timeline { margin: 30px 20px; position: relative; min-height: 500px; background: #222; border-radius: 10px; padding: 20px; }
-.timeline-row { display: flex; }
+#timeline {
+  margin: 30px 20px; position: relative;
+  min-height: 500px; background: #222; border-radius: 10px; padding: 0;
+  width: calc(40px * 38); /* cho 38 ngày */
+  overflow-x: auto;
+}
+.timeline-row { display: flex; height: 32px; align-items: center; }
 .month { width: 600px; text-align: left; font-weight: bold; font-size: 1.2em; color: #FFD600; margin-right: 40px; }
 .weekday, .date { width: 40px; text-align: center; color: #aaa; }
-.current-time-row { position: relative; height: 32px; margin-bottom: 4px; }
-.current-time-label { position: absolute; background: #fff; color: #222; padding: 2px 8px; border-radius: 6px; font-weight: bold; font-size: 0.9em; white-space: nowrap; }
-.current-time-line { position: absolute; width: 2px; height: 120px; background: #fff; z-index: 10; }
+.current-time-row { position: absolute; height: 0; left: 0; top: 96px; width: 100%; }
+.current-time-label { background: #fff; color: #222; padding: 2px 8px; border-radius: 6px; font-weight: bold; font-size: 0.9em; white-space: nowrap; position: absolute;}
+.current-time-line { position: absolute; width: 2px; height: 400px; background: #fff; z-index: 10; }
 .event-bar {
-  position: absolute; left: 0; height: 36px; min-width: 80px;
+  position: absolute; height: 36px;
   display: flex; align-items: center; border-radius: 8px; padding: 0 12px;
   font-weight: bold; font-size: 1em; cursor: pointer;
+  top: 140px; /* luôn bắt đầu sau trục ngày */
 }
 .red { background: #d32f2f; }
 .yellow { background: #fbc02d; color: #222; }
