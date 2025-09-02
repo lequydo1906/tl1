@@ -11,19 +11,26 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-// Helper: Tính vị trí trên timeline
-function getDateIndexFromDate(dateStr) {
-  const date = new Date(dateStr);
-  const month = date.getMonth() + 1;
-  const day = date.getDate();
-  return month === 8 ? day - 17 : 15 + (day - 1);
-}
-const daysCount = 15 + 23;
+// Timeline constants
+const pxPerDay = 40; // pixel cho mỗi ngày
+const timeline = document.getElementById('timeline');
+const startDate = new Date("2025-08-17");
+const endDate = new Date("2025-09-23");
+const daysCount = Math.round((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1; // 38 ngày
 const months = ["Tháng 8", "Tháng 9"];
 const weekdays = ["CN", "Th2", "Th3", "Th4", "Th5", "Th6", "Th7"];
-const dates = [...Array(daysCount)].map((_, i) => (i < 15 ? 17 + i : i - 15 + 1));
 
-// Tính thời gian còn lại đẹp
+// Helper cho ngày/tháng/thứ
+function getDateByIndex(idx) {
+  const date = new Date(startDate.getTime() + idx * 24 * 60 * 60 * 1000);
+  return date;
+}
+function getDateIndexFromDate(dateStr) {
+  const date = new Date(dateStr);
+  return Math.floor((date - startDate) / (1000 * 60 * 60 * 24));
+}
+
+// Thời gian còn lại đẹp
 function getTimeRemaining(endTime) {
   const now = new Date();
   const end = new Date(endTime);
@@ -48,56 +55,48 @@ function getTimeRemaining(endTime) {
   return parts.join(" ");
 }
 
-// Render timeline
+// Render timeline trục thời gian và sự kiện
 function renderTimeline(events) {
-  const timeline = document.getElementById('timeline');
   timeline.innerHTML = "";
 
-  // Dòng 1: Tháng
+  // 1. Dòng tháng
   const monthRow = document.createElement('div');
   monthRow.className = "timeline-row";
-  monthRow.style.position = "absolute";
-  monthRow.style.top = "0px"; monthRow.style.left = "0px";
-  monthRow.style.width = "100%";
-  monthRow.style.height = "32px";
-  monthRow.style.zIndex = "2";
-  monthRow.innerHTML = `<div class="month">${months[0]}</div><div class="month">${months[1]}</div>`;
+  for (let i = 0; i < daysCount; i++) {
+    const date = getDateByIndex(i);
+    let html = "";
+    if (i === 0) html = `<div class="month">${months[0]}</div>`;
+    if (i === 15) html = `<div class="month">${months[1]}</div>`;
+    monthRow.innerHTML += html ? html : '<div style="width:40px;"></div>';
+  }
   timeline.appendChild(monthRow);
 
-  // Dòng 2: Thứ
+  // 2. Dòng thứ
   const weekdayRow = document.createElement('div');
   weekdayRow.className = "timeline-row";
-  weekdayRow.style.position = "absolute";
-  weekdayRow.style.top = "32px"; weekdayRow.style.left = "0px";
-  weekdayRow.style.width = "100%";
-  weekdayRow.style.height = "32px";
-  weekdayRow.style.zIndex = "2";
   for (let i = 0; i < daysCount; i++) {
-    weekdayRow.innerHTML += `<div class="weekday">${weekdays[(i + 5) % 7]}</div>`;
+    const date = getDateByIndex(i);
+    weekdayRow.innerHTML += `<div class="weekday">${weekdays[date.getDay()]}</div>`;
   }
   timeline.appendChild(weekdayRow);
 
-  // Dòng 3: Ngày
+  // 3. Dòng ngày
   const dateRow = document.createElement('div');
   dateRow.className = "timeline-row";
-  dateRow.style.position = "absolute";
-  dateRow.style.top = "64px"; dateRow.style.left = "0px";
-  dateRow.style.width = "100%";
-  dateRow.style.height = "32px";
-  dateRow.style.zIndex = "2";
-  dates.forEach(date => {
-    dateRow.innerHTML += `<div class="date">${date}</div>`;
-  });
+  for (let i = 0; i < daysCount; i++) {
+    const date = getDateByIndex(i);
+    dateRow.innerHTML += `<div class="date">${date.getDate()}</div>`;
+  }
   timeline.appendChild(dateRow);
 
-  // Dòng 4: Giờ hiện tại + đường chỉ
+  // 4. Dòng giờ hiện tại + đường chỉ
   function renderCurrentTimeBar() {
     const now = new Date();
+    const idx = getDateIndexFromDate(now);
     const currentHour = now.getHours().toString().padStart(2, '0');
     const currentMinute = now.getMinutes().toString().padStart(2, '0');
     const currentSecond = now.getSeconds().toString().padStart(2, '0');
     const currentTimeLabel = `${currentHour}:${currentMinute}:${currentSecond}`;
-    const currentDateIdx = getDateIndexFromDate(now.toISOString());
 
     let currentTimeRow = timeline.querySelector('.current-time-row');
     if (!currentTimeRow) {
@@ -105,49 +104,49 @@ function renderTimeline(events) {
       currentTimeRow.className = "current-time-row";
       timeline.appendChild(currentTimeRow);
     }
-    currentTimeRow.innerHTML = `<span class="current-time-label" style="left:${currentDateIdx * 40 + 20}px;top:0;">${currentTimeLabel}</span>
-      <div class="current-time-line" style="left:${currentDateIdx * 40 + 20}px;"></div>`;
+    currentTimeRow.innerHTML = `<span class="current-time-label" style="left:${idx * pxPerDay + pxPerDay/2}px;top:0;">${currentTimeLabel}</span>
+      <div class="current-time-line" style="left:${idx * pxPerDay + pxPerDay/2}px;"></div>`;
   }
   renderCurrentTimeBar();
   if (window.__timelineTimer) clearInterval(window.__timelineTimer);
   window.__timelineTimer = setInterval(renderCurrentTimeBar, 1000);
 
-  // Dòng 5+: Sự kiện
-  const nowDate = new Date();
-  events.forEach(ev => {
-    ev.remaining = (new Date(ev.endTime) - nowDate) / (1000 * 60 * 60 * 24);
-  });
-  events.sort((a, b) => a.remaining - b.remaining);
-
-  // Xóa tooltip cũ nếu có
+  // 5. Sự kiện
+  timeline.querySelectorAll(".event-bar").forEach(e => e.remove());
   document.querySelectorAll('.event-tooltip').forEach(el => el.remove());
+  events.forEach((ev, row) => {
+    // Chuyển thời gian về Date
+    const start = ev.startTime ? new Date(ev.startTime) : new Date(ev.start);
+    const end = ev.endTime ? new Date(ev.endTime) : new Date(ev.end || ev.start);
+    // index trên timeline
+    const diffStart = Math.max(0, Math.floor((start - startDate) / (1000*60*60*24)));
+    const diffEnd = Math.min(daysCount - 1, Math.floor((end - startDate) / (1000*60*60*24)));
+    // vị trí và độ dài
+    const left = diffStart * pxPerDay;
+    const width = Math.max((diffEnd - diffStart + 1) * pxPerDay, pxPerDay / 2);
 
-  events.forEach((ev, idx) => {
-    const startIdx = getDateIndexFromDate(ev.startTime);
-    const endIdx = getDateIndexFromDate(ev.endTime);
-    const width = (endIdx - startIdx + 1) * 40;
     const bar = document.createElement('div');
-    bar.className = `event-bar ${ev.color}`;
-    bar.style.left = (startIdx * 40 + 20) + "px";
-    bar.style.top = (108 + idx * 44) + "px"; // 32+32+32+12px (mỗi dòng 32px, thêm 12px margin)
+    bar.className = `event-bar ${ev.color || ""}`;
+    bar.style.left = left + "px";
+    bar.style.top = (108 + row * 44) + "px";
     bar.style.width = width + "px";
     bar.style.zIndex = "3";
-    // Hiển thị ngày giờ
-    const startTimeShow = new Date(ev.startTime).toLocaleString('vi-VN');
-    const endTimeShow = new Date(ev.endTime).toLocaleString('vi-VN');
-    bar.innerHTML = `${ev.name} <span style="margin-left:8px;">${ev.duration}d</span>
+    // Thông tin sự kiện
+    const startTimeShow = start.toLocaleString('vi-VN');
+    const endTimeShow = end.toLocaleString('vi-VN');
+    bar.innerHTML = `${ev.name} <span style="margin-left:8px;">${ev.duration || (diffEnd-diffStart+1)}d</span>
       <span style="margin-left:8px;font-size:0.9em;">${startTimeShow} - ${endTimeShow}</span>
       <button class="delete-btn" onclick="deleteEvent('${ev.id}')">Xóa</button>`;
 
-    // Tạo tooltip
+    // Tooltip thời gian còn lại
     const tooltip = document.createElement('div');
     tooltip.className = "event-tooltip";
     tooltip.style.display = "none";
-    tooltip.innerText = "Còn lại: " + getTimeRemaining(ev.endTime);
+    tooltip.innerText = "Còn lại: " + getTimeRemaining(end);
     document.body.appendChild(tooltip);
 
     bar.onmousemove = function(e) {
-      tooltip.innerText = "Còn lại: " + getTimeRemaining(ev.endTime);
+      tooltip.innerText = "Còn lại: " + getTimeRemaining(end);
       tooltip.style.left = (e.pageX + 12) + "px";
       tooltip.style.top = (e.pageY - 10) + "px";
       tooltip.style.display = "block";
@@ -160,7 +159,7 @@ function renderTimeline(events) {
   });
 }
 
-// Đọc event Firestore realtime
+// Firestore realtime
 db.collection("events").onSnapshot(snap => {
   const events = [];
   snap.forEach(doc => events.push({ id: doc.id, ...doc.data() }));
