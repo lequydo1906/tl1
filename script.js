@@ -133,13 +133,24 @@ function renderTimeline(events) {
   // Event-bar
   timeline.querySelectorAll(".event-bar").forEach(e => e.remove());
   document.querySelectorAll('.event-tooltip').forEach(el => el.remove());
-  events.forEach((ev, idx) => {
-    const start = ev.startTime ? new Date(ev.startTime) : new Date(ev.start);
-    let end = ev.endTime ? new Date(ev.endTime) : new Date(ev.end || ev.start);
-    end = fixEndTime(end, start);
-    const left = calcLeftPx(start, startDate);
-    const right = calcLeftPx(end, startDate);
-    const width = Math.max(right - left, 4);
+  function isZeroHour(date) {
+  return date.getHours() === 0 && date.getMinutes() === 0 && date.getSeconds() === 0;
+}
+
+events.forEach((ev, idx) => {
+  const start = ev.startTime ? new Date(ev.startTime) : new Date(ev.start);
+  let end = ev.endTime ? new Date(ev.endTime) : new Date(ev.end || ev.start);
+
+  // Nếu end là 0h, thì thực chất event kết thúc ở cuối ngày trước
+  let right = calcLeftPx(end, startDate);
+  const left = calcLeftPx(start, startDate);
+
+  // Nếu end là 0h và lớn hơn start, width = right - left - 2
+  let width = right - left;
+  if (isZeroHour(end) && end > start) {
+    width -= 2; // Trừ 2px để sát đường kẻ ngày, không lấn sang
+  }
+  width = Math.max(width, 4);
 
     const bar = document.createElement('div');
     bar.className = `event-bar ${ev.color || ""}`;
