@@ -8,13 +8,14 @@ const firebaseConfig = {
       appId: "1:732658035286:web:40091d26eee343579aa9f7",
     };
 
+
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
 const pxPerDay = Math.floor(window.innerWidth / 14); // mỗi ngày chiếm 1/14 màn hình
-const today = new Date();
 function getToday() {
-  return new Date(today.getFullYear(), today.getMonth(), today.getDate(), 0, 0, 0, 0);
+  const now = new Date();
+  return new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
 }
 function getStartEndDate() {
   const today = getToday();
@@ -30,6 +31,7 @@ function getDaysCount(startDate, endDate) {
 const timeline = document.getElementById('timeline');
 const timelineContainer = document.getElementById('timeline-container');
 
+// Helper
 function getDateByIndex(idx, startDate) {
   return new Date(startDate.getTime() + idx * 24 * 60 * 60 * 1000);
 }
@@ -49,17 +51,26 @@ function calcLeftPx(date, startDate) {
   px += second * pxPerDay / 24 / 3600;
   return px;
 }
+function getTimeRemaining(endTime) {
+  const now = new Date();
+  const end = new Date(endTime);
+  let diff = end - now;
+  if (diff <= 0) return "Đã kết thúc";
+  let hrs = Math.floor(diff / (1000 * 60 * 60));
+  let mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+  let secs = Math.floor((diff % (1000 * 60)) / 1000);
+  return `Còn lại ${hrs}h ${mins}m ${secs}s`;
+}
 function scrollToCurrentTime(startDate) {
   const now = new Date();
   const left = calcLeftPx(now, startDate);
   timelineContainer.scrollLeft = left - timelineContainer.clientWidth / 2 + pxPerDay;
 }
 
-// Render timeline: chỉ cột ngày, event-bar, trục hiện tại
+// Luôn render timeline 14 ngày, kể cả không có sự kiện
 function renderTimeline(events) {
   const { startDate, endDate } = getStartEndDate();
   const daysCount = getDaysCount(startDate, endDate);
-
   timeline.innerHTML = "";
   timeline.style.width = (daysCount * pxPerDay) + "px";
 
@@ -68,14 +79,10 @@ function renderTimeline(events) {
     const date = getDateByIndex(i, startDate);
     const cell = document.createElement('div');
     cell.className = "date-col";
-    cell.style.position = 'absolute';
     cell.style.left = (i * pxPerDay) + 'px';
     cell.style.top = "0px";
     cell.style.width = pxPerDay + 'px';
     cell.style.height = "40px";
-    cell.style.textAlign = 'center';
-    cell.style.color = '#FFD600';
-    cell.style.fontWeight = 'bold';
     cell.innerText = date.getDate();
 
     // Đường kẻ dọc
@@ -123,12 +130,10 @@ function renderTimeline(events) {
 
     const bar = document.createElement('div');
     bar.className = `event-bar ${ev.color || ""}`;
-    bar.style.position = 'absolute';
     bar.style.left = left + "px";
     bar.style.top = (60 + idx * 44) + "px";
     bar.style.width = width + "px";
     bar.style.height = "36px";
-    bar.style.zIndex = "3";
     bar.innerHTML = `${ev.name} <span style="margin-left:8px;">${ev.duration || ""}</span>
       <span style="margin-left:8px;font-size:0.9em;">${start.toLocaleString('vi-VN')} - ${end.toLocaleString('vi-VN')}</span>
       <button class="delete-btn" onclick="deleteEvent('${ev.id}')">Xóa</button>`;
@@ -151,4 +156,37 @@ function renderTimeline(events) {
 
     timeline.appendChild(bar);
   });
+}
+
+// Firestore realtime
+db.collection("events").onSnapshot(snap => {
+  const events = [];
+  snap.forEach(doc => events.push({ id: doc.id, ...doc.data() }));
+  renderTimeline(events);
+});
+
+// Thêm event
+document.getElementById('eventForm').onsubmit = function(e) {
+  e.preventDefault();
+  const startTime = document.getElementById('startTime').value;
+  const endTime = document.getElementById('endTime').value;
+  const start = new Date(startTime);
+  const end = new Date(endTime);
+  const duration = Math.max(1, Math.round((end - start) / (1000 * 60 * 60 * 24)));
+
+  const data = {
+    name: document.getElementById('name').value,
+    color: document.getElementById('color').value,
+    startTime: start.toISOString(),
+    endTime: end.toISOString(),
+    duration
+  };
+  db.collection("events").add(data).then(() => {
+    document.getElementById('eventForm').reset();
+  });
+};
+
+// Xóa event
+function deleteEvent(id) {
+  db.collection("events").doc(id).delete();
 }
