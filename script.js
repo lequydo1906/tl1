@@ -8,29 +8,27 @@ const firebaseConfig = {
       appId: "1:732658035286:web:40091d26eee343579aa9f7",
     };
 
+
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
 // Timeline constants
 const pxPerDay = 40; // pixel cho mỗi ngày
-const timeline = document.getElementById('timeline');
 const startDate = new Date("2025-08-17");
 const endDate = new Date("2025-09-23");
-const daysCount = Math.round((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1; // 38 ngày
+const daysCount = Math.round((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
 const months = ["Tháng 8", "Tháng 9"];
 const weekdays = ["CN", "Th2", "Th3", "Th4", "Th5", "Th6", "Th7"];
+const timeline = document.getElementById('timeline');
 
-// Helper cho ngày/tháng/thứ
+// Helper
 function getDateByIndex(idx) {
-  const date = new Date(startDate.getTime() + idx * 24 * 60 * 60 * 1000);
-  return date;
+  return new Date(startDate.getTime() + idx * 24 * 60 * 60 * 1000);
 }
 function getDateIndexFromDate(dateStr) {
   const date = new Date(dateStr);
   return Math.floor((date - startDate) / (1000 * 60 * 60 * 24));
 }
-
-// Thời gian còn lại đẹp
 function getTimeRemaining(endTime) {
   const now = new Date();
   const end = new Date(endTime);
@@ -55,37 +53,54 @@ function getTimeRemaining(endTime) {
   return parts.join(" ");
 }
 
-// Render timeline trục thời gian và sự kiện
+// Render timeline
 function renderTimeline(events) {
   timeline.innerHTML = "";
 
   // 1. Dòng tháng
   const monthRow = document.createElement('div');
   monthRow.className = "timeline-row";
+  monthRow.style.display = 'flex';
   for (let i = 0; i < daysCount; i++) {
     const date = getDateByIndex(i);
-    let html = "";
-    if (i === 0) html = `<div class="month">${months[0]}</div>`;
-    if (i === 15) html = `<div class="month">${months[1]}</div>`;
-    monthRow.innerHTML += html ? html : '<div style="width:40px;"></div>';
+    const monthDiv = document.createElement('div');
+    monthDiv.style.width = pxPerDay + 'px';
+    monthDiv.style.textAlign = 'center';
+    monthDiv.style.fontWeight = (i === 0 || i === 15) ? 'bold' : '';
+    monthDiv.style.color = (i === 0 || i === 15) ? '#FFD600' : '#aaa';
+    monthDiv.style.fontSize = (i === 0 || i === 15) ? '1.2em' : '0.9em';
+    monthDiv.innerText = (i === 0) ? months[0] : (i === 15) ? months[1] : '';
+    monthRow.appendChild(monthDiv);
   }
   timeline.appendChild(monthRow);
 
   // 2. Dòng thứ
   const weekdayRow = document.createElement('div');
   weekdayRow.className = "timeline-row";
+  weekdayRow.style.display = 'flex';
   for (let i = 0; i < daysCount; i++) {
     const date = getDateByIndex(i);
-    weekdayRow.innerHTML += `<div class="weekday">${weekdays[date.getDay()]}</div>`;
+    const dayDiv = document.createElement('div');
+    dayDiv.style.width = pxPerDay + 'px';
+    dayDiv.style.textAlign = 'center';
+    dayDiv.style.color = '#aaa';
+    dayDiv.innerText = weekdays[date.getDay()];
+    weekdayRow.appendChild(dayDiv);
   }
   timeline.appendChild(weekdayRow);
 
   // 3. Dòng ngày
   const dateRow = document.createElement('div');
   dateRow.className = "timeline-row";
+  dateRow.style.display = 'flex';
   for (let i = 0; i < daysCount; i++) {
     const date = getDateByIndex(i);
-    dateRow.innerHTML += `<div class="date">${date.getDate()}</div>`;
+    const dateDiv = document.createElement('div');
+    dateDiv.style.width = pxPerDay + 'px';
+    dateDiv.style.textAlign = 'center';
+    dateDiv.style.color = '#aaa';
+    dateDiv.innerText = date.getDate();
+    dateRow.appendChild(dateDiv);
   }
   timeline.appendChild(dateRow);
 
@@ -97,44 +112,49 @@ function renderTimeline(events) {
     const currentMinute = now.getMinutes().toString().padStart(2, '0');
     const currentSecond = now.getSeconds().toString().padStart(2, '0');
     const currentTimeLabel = `${currentHour}:${currentMinute}:${currentSecond}`;
-
     let currentTimeRow = timeline.querySelector('.current-time-row');
     if (!currentTimeRow) {
       currentTimeRow = document.createElement('div');
       currentTimeRow.className = "current-time-row";
       timeline.appendChild(currentTimeRow);
     }
-    currentTimeRow.innerHTML = `<span class="current-time-label" style="left:${idx * pxPerDay + pxPerDay/2}px;top:0;">${currentTimeLabel}</span>
-      <div class="current-time-line" style="left:${idx * pxPerDay + pxPerDay/2}px;"></div>`;
+    currentTimeRow.style.position = 'absolute';
+    currentTimeRow.style.left = '0px';
+    currentTimeRow.style.top = (3 * 32) + 'px'; // sau 3 dòng
+    currentTimeRow.style.height = '0px';
+    currentTimeRow.style.width = (daysCount * pxPerDay) + 'px';
+    currentTimeRow.style.zIndex = '10';
+    currentTimeRow.innerHTML = `<span class="current-time-label" style="left:${idx * pxPerDay + pxPerDay / 2}px;top:-24px;position:absolute;">${currentTimeLabel}</span>
+      <div class="current-time-line" style="left:${idx * pxPerDay + pxPerDay / 2}px;top:0px;position:absolute;"></div>`;
   }
   renderCurrentTimeBar();
   if (window.__timelineTimer) clearInterval(window.__timelineTimer);
   window.__timelineTimer = setInterval(renderCurrentTimeBar, 1000);
 
-  // 5. Sự kiện
+  // 5. Event-bar: tuyệt đối, left/top tính toán chuẩn
   timeline.querySelectorAll(".event-bar").forEach(e => e.remove());
   document.querySelectorAll('.event-tooltip').forEach(el => el.remove());
   events.forEach((ev, row) => {
-    // Chuyển thời gian về Date
     const start = ev.startTime ? new Date(ev.startTime) : new Date(ev.start);
     const end = ev.endTime ? new Date(ev.endTime) : new Date(ev.end || ev.start);
-    // index trên timeline
-    const diffStart = Math.max(0, Math.floor((start - startDate) / (1000*60*60*24)));
-    const diffEnd = Math.min(daysCount - 1, Math.floor((end - startDate) / (1000*60*60*24)));
-    // vị trí và độ dài
+
+    const diffStart = Math.max(0, getDateIndexFromDate(start));
+    const diffEnd = Math.min(daysCount - 1, getDateIndexFromDate(end));
     const left = diffStart * pxPerDay;
     const width = Math.max((diffEnd - diffStart + 1) * pxPerDay, pxPerDay / 2);
 
     const bar = document.createElement('div');
     bar.className = `event-bar ${ev.color || ""}`;
+    bar.style.position = 'absolute';
     bar.style.left = left + "px";
-    bar.style.top = (108 + row * 44) + "px";
+    bar.style.top = (3 * 32 + 16 + row * 44) + "px"; // sau 3 dòng + margin + row
     bar.style.width = width + "px";
     bar.style.zIndex = "3";
+    bar.style.height = "36px";
     // Thông tin sự kiện
     const startTimeShow = start.toLocaleString('vi-VN');
     const endTimeShow = end.toLocaleString('vi-VN');
-    bar.innerHTML = `${ev.name} <span style="margin-left:8px;">${ev.duration || (diffEnd-diffStart+1)}d</span>
+    bar.innerHTML = `${ev.name} <span style="margin-left:8px;">${ev.duration || (diffEnd - diffStart + 1)}d</span>
       <span style="margin-left:8px;font-size:0.9em;">${startTimeShow} - ${endTimeShow}</span>
       <button class="delete-btn" onclick="deleteEvent('${ev.id}')">Xóa</button>`;
 
