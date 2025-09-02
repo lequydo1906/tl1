@@ -8,15 +8,17 @@ const firebaseConfig = {
       appId: "1:732658035286:web:40091d26eee343579aa9f7",
     };
 
+
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
 // Timeline constants
 const pxPerDay = 40; // pixel cho mỗi ngày
-const startDate = new Date("2025-08-17");
-const endDate = new Date("2025-09-23");
+const today = new Date();
+const startDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 15, 0, 0, 0, 0); // 15 ngày trước
+const endDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 15, 0, 0, 0, 0);   // 15 ngày sau
 const daysCount = Math.round((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
-const months = ["Tháng 8", "Tháng 9"];
+const months = ["Tháng 1", "Tháng 2", "Tháng 3", "Tháng 4", "Tháng 5", "Tháng 6", "Tháng 7", "Tháng 8", "Tháng 9", "Tháng 10", "Tháng 11", "Tháng 12"];
 const weekdays = ["CN", "Th2", "Th3", "Th4", "Th5", "Th6", "Th7"];
 const timeline = document.getElementById('timeline');
 
@@ -52,14 +54,20 @@ function getTimeRemaining(endTime) {
   return parts.join(" ");
 }
 
-// Tính left theo thời gian (có giờ, phút, giây)
+// Tính left pixel của đường kẻ dọc 0h mỗi ngày
+function getDayLineLeft(idx) {
+  return idx * pxPerDay;
+}
+
+// Tính left pixel của 1 thời điểm so với đường kẻ dọc 0h
 function calcLeftPx(date) {
   if (!(date instanceof Date)) date = new Date(date);
   const dayIdx = getDateIndexFromDate(date);
+  const leftBase = getDayLineLeft(dayIdx);
   const hour = date.getHours();
   const minute = date.getMinutes();
   const second = date.getSeconds();
-  let px = dayIdx * pxPerDay;
+  let px = leftBase;
   px += hour * pxPerDay / 24;
   px += minute * pxPerDay / 24 / 60;
   px += second * pxPerDay / 24 / 3600;
@@ -84,15 +92,20 @@ function renderTimeline(events) {
       cell.style.textAlign = 'center';
       cell.style.position = 'relative';
       if (type === "month") {
-        cell.style.fontWeight = (i === 0 || i === 15) ? 'bold' : '';
-        cell.style.color = (i === 0 || i === 15) ? '#FFD600' : '#aaa';
-        cell.style.fontSize = (i === 0 || i === 15) ? '1.2em' : '0.9em';
-        cell.innerText = (i === 0) ? months[0] : (i === 15) ? months[1] : '';
+        // Chỉ hiện khi chuyển tháng hoặc ngày đầu
+        if (i === 0 || date.getDate() === 1) {
+          cell.style.fontWeight = 'bold';
+          cell.style.color = '#FFD600';
+          cell.style.fontSize = '1.2em';
+          cell.innerText = months[date.getMonth()];
+        } else {
+          cell.innerText = '';
+        }
       }
       if (type === "weekday") cell.innerText = weekdays[date.getDay()];
       if (type === "date") cell.innerText = date.getDate();
 
-      // Đường kẻ dọc chỉ xuất hiện ở dòng ngày, kéo từ giữa số xuống dưới event
+      // Đường kẻ dọc chỉ xuất hiện ở dòng ngày, kéo từ giữa số ngày xuống dưới event
       if (type === "date") {
         const line = document.createElement('div');
         line.className = "timeline-day-line";
@@ -110,7 +123,7 @@ function renderTimeline(events) {
     timeline.appendChild(row);
   });
 
-  // 2. Đường chỉ giờ hiện tại
+  // 2. Đường chỉ giờ hiện tại (dựa vào đường kẻ dọc 0h mỗi ngày)
   function renderCurrentTimeBar() {
     const now = new Date();
     const left = calcLeftPx(now);
@@ -137,7 +150,7 @@ function renderTimeline(events) {
   if (window.__timelineTimer) clearInterval(window.__timelineTimer);
   window.__timelineTimer = setInterval(renderCurrentTimeBar, 1000);
 
-  // 3. Event-bar: left và width tính theo giờ/phút/giây
+  // 3. Event-bar: left và width tính theo đường kẻ dọc 0h mỗi ngày
   timeline.querySelectorAll(".event-bar").forEach(e => e.remove());
   document.querySelectorAll('.event-tooltip').forEach(el => el.remove());
   events.forEach((ev, row) => {
