@@ -25,6 +25,7 @@ form { margin: 20px; display: flex; gap: 8px; flex-wrap: wrap; }
   font-weight: bold;
   background: transparent;
   z-index: 2;
+  text-align: center;
 }
 .timeline-day-line {
   background: #444;

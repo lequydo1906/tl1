@@ -8,7 +8,6 @@ const firebaseConfig = {
       appId: "1:732658035286:web:40091d26eee343579aa9f7",
     };
 
-
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
@@ -74,7 +73,7 @@ function renderTimeline(events) {
   timeline.innerHTML = "";
   timeline.style.width = (daysCount * pxPerDay) + "px";
 
-  // 1. Cột ngày + đường kẻ dọc
+  // 1. Cột ngày + đường kẻ dọc (đặt vào giữa số ngày, vị trí chính là 0h)
   for (let i = 0; i < daysCount; i++) {
     const date = getDateByIndex(i, startDate);
     const cell = document.createElement('div');
@@ -85,16 +84,20 @@ function renderTimeline(events) {
     cell.style.height = "40px";
     cell.innerText = date.getDate();
 
-    // Đường kẻ dọc
+    timeline.appendChild(cell);
+  }
+
+  // Đường kẻ dọc ngày (0h) vào giữa số ngày
+  for (let i = 0; i < daysCount; i++) {
     const line = document.createElement('div');
     line.className = "timeline-day-line";
-    line.style.left = "50%";
-    line.style.top = "20px";
-    line.style.height = "500px";
+    // Căn giữa số ngày: left = vị trí cột + pxPerDay/2
+    line.style.position = "absolute";
+    line.style.left = (i * pxPerDay + pxPerDay / 2) + "px";
+    line.style.top = "40px";
+    line.style.height = "460px";
     line.style.width = "1px";
-    cell.appendChild(line);
-
-    timeline.appendChild(cell);
+    timeline.appendChild(line);
   }
 
   // 2. Đường chỉ thời gian hiện tại
@@ -108,11 +111,11 @@ function renderTimeline(events) {
       timeline.appendChild(currentTimeRow);
     }
     currentTimeRow.style.left = left + "px";
-    currentTimeRow.style.top = "0px";
+    currentTimeRow.style.top = "40px";
     currentTimeRow.style.width = "2px";
-    currentTimeRow.style.height = "500px";
+    currentTimeRow.style.height = "460px";
     currentTimeRow.innerHTML = `<div class="current-time-line"></div>
-      <div class="current-time-label" style="top:0;left:-40px;">${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}</div>`;
+      <div class="current-time-label" style="top:-32px;left:-40px;">${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}</div>`;
     scrollToCurrentTime(startDate);
   }
   renderCurrentTimeBar();
