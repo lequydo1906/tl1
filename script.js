@@ -76,35 +76,31 @@ function renderTimeline(events) {
   timeline.innerHTML = "";
   timeline.style.width = (daysCount * pxPerDay) + "px";
 
-  // 1. Đường kẻ dọc ngày (0h) đặt ở đầu cột và số ngày nằm trên đầu đường kẻ
+  // Đường kẻ dọc + số ngày nằm trên đầu đường kẻ
   for (let i = 0; i < daysCount; i++) {
     const date = getDateByIndex(i, startDate);
 
-    // Đường kẻ dọc
+    // Đường kẻ dọc ngày tại đúng vị trí 0h
     const line = document.createElement('div');
     line.className = "timeline-day-line";
     line.style.position = "absolute";
-    line.style.left = (i * pxPerDay) + "px"; // <-- Đúng 0h đầu ngày
+    line.style.left = (i * pxPerDay) + "px";
     line.style.top = "40px";
     line.style.height = "460px";
     line.style.width = "1px";
     timeline.appendChild(line);
 
-    // Số ngày
+    // Số ngày nằm trên đầu đường kẻ
     const num = document.createElement('div');
     num.className = "date-col";
     num.style.position = 'absolute';
-    num.style.left = (i * pxPerDay - 15) + 'px'; // Canh giữa số với đường kẻ (sửa lại số nếu cần)
+    num.style.left = (i * pxPerDay - 15) + 'px'; // Canh giữa số với đường kẻ
     num.style.top = "0px";
-    num.style.width = "30px";
-    num.style.height = "40px";
-    num.style.lineHeight = "40px";
-    num.style.textAlign = "center";
     num.innerText = date.getDate();
     timeline.appendChild(num);
   }
 
-  // 2. Đường chỉ thời gian hiện tại (24h format)
+  // Đường chỉ thời gian hiện tại (24h format)
   function renderCurrentTimeBar() {
     const now = new Date();
     const left = calcLeftPx(now, startDate);
@@ -126,14 +122,15 @@ function renderTimeline(events) {
   if (window.__timelineTimer) clearInterval(window.__timelineTimer);
   window.__timelineTimer = setInterval(renderCurrentTimeBar, 1000);
 
-  // 3. Event-bar
+  // Event-bar
   timeline.querySelectorAll(".event-bar").forEach(e => e.remove());
   document.querySelectorAll('.event-tooltip').forEach(el => el.remove());
   events.forEach((ev, idx) => {
     const start = ev.startTime ? new Date(ev.startTime) : new Date(ev.start);
     const end = ev.endTime ? new Date(ev.endTime) : new Date(ev.end || ev.start);
     const left = calcLeftPx(start, startDate);
-    const width = Math.max(calcLeftPx(end, startDate) - left, 4);
+    const right = calcLeftPx(end, startDate);
+    const width = Math.max(right - left, 4);
 
     const bar = document.createElement('div');
     bar.className = `event-bar ${ev.color || ""}`;
