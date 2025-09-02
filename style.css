@@ -1,23 +1,36 @@
 body { background: #111; color: #fff; font-family: Arial, sans-serif; }
 h1 { font-size: 2em; margin: 20px; }
 form { margin: 20px; display: flex; gap: 8px; flex-wrap: wrap; }
-#timeline {
-  margin: 30px 20px; position: relative;
-  min-height: 500px; background: #222; border-radius: 10px; padding: 0;
-  width: calc(40px * 38); /* cho 38 ngày */
+
+#timeline-container {
+  margin: 30px 20px;
+  background: #222;
+  border-radius: 10px;
+  padding: 20px 0 24px 0;
   overflow-x: auto;
 }
-.timeline-row { display: flex; height: 32px; align-items: center; }
-.month { width: 600px; text-align: left; font-weight: bold; font-size: 1.2em; color: #FFD600; margin-right: 40px; }
-.weekday, .date { width: 40px; text-align: center; color: #aaa; }
-.current-time-row { position: absolute; height: 0; left: 0; top: 96px; width: 100%; }
-.current-time-label { background: #fff; color: #222; padding: 2px 8px; border-radius: 6px; font-weight: bold; font-size: 0.9em; white-space: nowrap; position: absolute;}
-.current-time-line { position: absolute; width: 2px; height: 400px; background: #fff; z-index: 10; }
+
+#timeline {
+  position: relative;
+  width: calc(40px * 38); /* 38 ngày, mỗi ngày là 40px */
+  min-width: 800px;
+  min-height: 500px;
+  margin: 0 auto;
+}
+
+.timeline-row { display: flex; }
+.month { width: 600px; text-align: left; font-weight: bold; font-size: 1.2em; color: #FFD600; margin-right: 40px;}
+.weekday, .date { width: 40px; text-align: center; color: #aaa; font-size: 1em; }
+.current-time-row { position: absolute; left: 0; top: 96px; height: 0; width: 100%; z-index: 10; pointer-events: none;}
+.current-time-label { position: absolute; background: #fff; color: #222; padding: 2px 8px; border-radius: 6px; font-weight: bold; font-size: 0.9em; white-space: nowrap; transform: translate(-50%, -100%);}
+.current-time-line { position: absolute; width: 2px; height: 400px; background: #fff; z-index: 10; top: 22px;}
 .event-bar {
-  position: absolute; height: 36px;
-  display: flex; align-items: center; border-radius: 8px; padding: 0 12px;
+  position: absolute;
+  height: 36px;
+  display: flex; align-items: center; border-radius: 8px;
+  padding: 0 12px;
   font-weight: bold; font-size: 1em; cursor: pointer;
-  top: 140px; /* luôn bắt đầu sau trục ngày */
+  z-index: 3;
 }
 .red { background: #d32f2f; }
 .yellow { background: #fbc02d; color: #222; }
