@@ -3,31 +3,35 @@
 <head>
   <meta charset="UTF-8">
   <title>Dòng thời gian sự kiện</title>
-  <link rel="stylesheet" href="style.css">
-  <!-- Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore-compat.js"></script>
+  <link rel="stylesheet" href="timeline.css">
 </head>
 <body>
-  <h1>Dòng thời gian sự kiện</h1>
-  <form id="eventForm">
-    <input type="text" id="name" placeholder="Tên sự kiện" required>
-    <!-- Luôn là kiểu 24 giờ -->
-    <input type="datetime-local" id="startTime" required>
-    <input type="datetime-local" id="endTime" required>
-    <select id="color">
-      <option value="red">Đỏ</option>
-      <option value="yellow">Vàng</option>
-      <option value="gray">Xám</option>
-      <option value="pink">Hồng</option>
-      <option value="blue">Xanh dương</option>
-      <option value="indigo">Xanh tím</option>
-    </select>
-    <button type="submit">Thêm sự kiện</button>
-  </form>
-  <div id="timeline-container">
-    <div id="timeline"></div>
+  <div class="timeline-container">
+    <h1 class="timeline-title">Dòng thời gian sự kiện</h1>
+    <p class="timeline-desc">
+      Xem các sự kiện của Wuthering Waves theo giờ địa phương hoặc <a href="#">giờ của máy chủ</a> khác.
+    </p>
+    <div class="timeline-toolbar">
+      <select id="region-select">
+        <option>Châu Á, Đông Nam Á, Đài Loan/ Hồng Kông/ Ma...</option>
+      </select>
+      <label>
+        <input type="checkbox" checked>
+        Hiện thời gian được điều chỉnh dựa trên giờ địa phương <span class="timezone">(Asia/Bangkok)</span>
+      </label>
+    </div>
+    <div class="timeline-main">
+      <!-- Header months -->
+      <div class="timeline-months">
+        <div class="month-label">Tháng 8</div>
+        <div class="month-label">Tháng 9</div>
+      </div>
+      <!-- Days grid -->
+      <div class="timeline-days" id="timeline-days"></div>
+      <!-- Events -->
+      <div class="timeline-events" id="timeline-events"></div>
+    </div>
   </div>
-  <script src="script.js"></script>
+  <script src="timeline.js"></script>
 </body>
 </html>
