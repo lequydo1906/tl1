@@ -16,24 +16,24 @@ form { margin: 20px; display: flex; gap: 8px; flex-wrap: wrap; }
   min-height: 500px;
 }
 
-.timeline-row { display: flex; }
-.month { width: 40px; text-align: center; font-weight: bold; font-size: 1.2em; color: #FFD600; }
-.weekday, .date { width: 40px; text-align: center; color: #aaa; font-size: 1em; }
+.date-col {
+  position: absolute;
+  height: 40px;
+  font-size: 1.1em;
+  color: #FFD600;
+  font-weight: bold;
+  background: transparent;
+}
 
 .timeline-day-line {
-  pointer-events: none;
+  position: absolute;
   background: #444;
   z-index: 1;
   width: 1px;
-  position: absolute;
 }
 
 .current-time-row {
   position: absolute;
-  left: 0;
-  top: 96px;
-  height: 0;
-  width: 100%;
   z-index: 10;
   pointer-events: none;
 }
@@ -46,14 +46,13 @@ form { margin: 20px; display: flex; gap: 8px; flex-wrap: wrap; }
   font-weight: bold;
   font-size: 0.9em;
   white-space: nowrap;
-  transform: translate(-50%, -100%);
 }
 .current-time-line {
   background: #FFD600 !important;
   z-index: 10;
-  position: absolute;
   width: 2px;
   height: 400px;
+  position: absolute;
 }
 
 .event-bar {
