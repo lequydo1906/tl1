@@ -151,7 +151,7 @@ events.forEach((ev, idx) => {
     width -= 2; // Trừ 2px để sát đường kẻ ngày, không lấn sang
   }
   width = Math.max(width, 4);
-
+});
     const bar = document.createElement('div');
     bar.className = `event-bar ${ev.color || ""}`;
     bar.style.left = left + "px";
