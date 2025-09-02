@@ -57,8 +57,10 @@ form { margin: 20px; display: flex; gap: 8px; flex-wrap: wrap; }
 }
 .timeline-day-line {
   pointer-events: none;
+  background: #444;
+  z-index: 1;
 }
 .current-time-line {
   background: #FFD600 !important;
-  z-index: 5;
+  z-index: 10;
 }

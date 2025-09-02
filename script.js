@@ -8,7 +8,6 @@ const firebaseConfig = {
       appId: "1:732658035286:web:40091d26eee343579aa9f7",
     };
 
-
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
@@ -29,6 +28,29 @@ function getDateIndexFromDate(date) {
   if (!(date instanceof Date)) date = new Date(date);
   return Math.floor((date - startDate) / (1000 * 60 * 60 * 24));
 }
+function getTimeRemaining(endTime) {
+  const now = new Date();
+  const end = new Date(endTime);
+  let diff = end - now;
+  if (diff <= 0) return "Đã kết thúc";
+  let months = Math.floor(diff / (1000 * 60 * 60 * 24 * 30));
+  diff -= months * (1000 * 60 * 60 * 24 * 30);
+  let days = Math.floor(diff / (1000 * 60 * 60 * 24));
+  diff -= days * (1000 * 60 * 60 * 24);
+  let hours = Math.floor(diff / (1000 * 60 * 60));
+  diff -= hours * (1000 * 60 * 60);
+  let minutes = Math.floor(diff / (1000 * 60));
+  diff -= minutes * (1000 * 60);
+  let seconds = Math.floor(diff / 1000);
+
+  let parts = [];
+  if (months > 0) parts.push(months + " tháng");
+  if (days > 0) parts.push(days + " ngày");
+  if (hours > 0) parts.push(hours + " giờ");
+  if (minutes > 0) parts.push(minutes + " phút");
+  parts.push(seconds + " giây");
+  return parts.join(" ");
+}
 
 // Tính left theo thời gian (có giờ, phút, giây)
 function calcLeftPx(date) {
@@ -48,16 +70,19 @@ function calcLeftPx(date) {
 function renderTimeline(events) {
   timeline.innerHTML = "";
 
-  // 1. Dòng tháng/thứ/ngày
+  // 1. Dòng tháng/thứ/ngày (dùng flex cho mỗi dòng)
   ["month", "weekday", "date"].forEach((type, idx) => {
     const row = document.createElement('div');
     row.className = "timeline-row";
     row.style.display = 'flex';
+    row.style.position = 'relative';
+    row.style.height = '32px';
     for (let i = 0; i < daysCount; i++) {
       const date = getDateByIndex(i);
       const cell = document.createElement('div');
       cell.style.width = pxPerDay + 'px';
       cell.style.textAlign = 'center';
+      cell.style.position = 'relative';
       if (type === "month") {
         cell.style.fontWeight = (i === 0 || i === 15) ? 'bold' : '';
         cell.style.color = (i === 0 || i === 15) ? '#FFD600' : '#aaa';
@@ -66,26 +91,26 @@ function renderTimeline(events) {
       }
       if (type === "weekday") cell.innerText = weekdays[date.getDay()];
       if (type === "date") cell.innerText = date.getDate();
+
+      // Đường kẻ dọc chỉ xuất hiện ở dòng ngày, kéo từ giữa số xuống dưới event
+      if (type === "date") {
+        const line = document.createElement('div');
+        line.className = "timeline-day-line";
+        line.style.position = "absolute";
+        line.style.left = "50%";
+        line.style.top = "16px"; // từ giữa số ngày
+        line.style.height = "calc(100% + 300px)"; // kéo xuống đủ qua các event-bar
+        line.style.width = "1px";
+        line.style.background = "#444";
+        line.style.zIndex = "1";
+        cell.appendChild(line);
+      }
       row.appendChild(cell);
     }
     timeline.appendChild(row);
   });
 
-  // 2. Render các đường kẻ dọc cho từng ngày
-  for (let i = 0; i <= daysCount; i++) {
-    const line = document.createElement('div');
-    line.className = "timeline-day-line";
-    line.style.position = "absolute";
-    line.style.left = (i * pxPerDay) + "px";
-    line.style.top = "0";
-    line.style.height = "100%";
-    line.style.width = "1px";
-    line.style.background = "#444";
-    line.style.zIndex = "1";
-    timeline.appendChild(line);
-  }
-
-  // 3. Đường chỉ giờ hiện tại
+  // 2. Đường chỉ giờ hiện tại
   function renderCurrentTimeBar() {
     const now = new Date();
     const left = calcLeftPx(now);
@@ -112,7 +137,7 @@ function renderTimeline(events) {
   if (window.__timelineTimer) clearInterval(window.__timelineTimer);
   window.__timelineTimer = setInterval(renderCurrentTimeBar, 1000);
 
-  // 4. Event-bar: left và width tính theo giờ/phút/giây
+  // 3. Event-bar: left và width tính theo giờ/phút/giây
   timeline.querySelectorAll(".event-bar").forEach(e => e.remove());
   document.querySelectorAll('.event-tooltip').forEach(el => el.remove());
   events.forEach((ev, row) => {
