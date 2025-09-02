@@ -23,13 +23,13 @@ form { margin: 20px; display: flex; gap: 8px; flex-wrap: wrap; }
   color: #FFD600;
   font-weight: bold;
   background: transparent;
+  z-index: 2;
 }
-
 .timeline-day-line {
-  position: absolute;
   background: #444;
   z-index: 1;
   width: 1px;
+  position: absolute;
 }
 
 .current-time-row {
