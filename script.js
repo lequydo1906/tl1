@@ -8,10 +8,12 @@ const firebaseConfig = {
       appId: "1:732658035286:web:40091d26eee343579aa9f7",
     };
 
+
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
 const pxPerDay = Math.floor(window.innerWidth / 14); // mỗi ngày chiếm 1/14 màn hình
+
 function getToday() {
   const now = new Date();
   return new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
@@ -60,6 +62,11 @@ function getTimeRemaining(endTime) {
   let secs = Math.floor((diff % (1000 * 60)) / 1000);
   return `Còn lại ${hrs}h ${mins}m ${secs}s`;
 }
+function formatTime24h(date) {
+  return date.getHours().toString().padStart(2, '0')
+    + ':' + date.getMinutes().toString().padStart(2, '0')
+    + ':' + date.getSeconds().toString().padStart(2, '0');
+}
 function scrollToCurrentTime(startDate) {
   const now = new Date();
   const left = calcLeftPx(now, startDate);
@@ -82,6 +89,8 @@ function renderTimeline(events) {
     cell.style.top = "0px";
     cell.style.width = pxPerDay + 'px';
     cell.style.height = "40px";
+    cell.style.lineHeight = "40px";
+    cell.style.textAlign = "center";
     cell.innerText = date.getDate();
 
     timeline.appendChild(cell);
@@ -100,7 +109,7 @@ function renderTimeline(events) {
     timeline.appendChild(line);
   }
 
-  // 2. Đường chỉ thời gian hiện tại
+  // 2. Đường chỉ thời gian hiện tại (24h format)
   function renderCurrentTimeBar() {
     const now = new Date();
     const left = calcLeftPx(now, startDate);
@@ -115,7 +124,7 @@ function renderTimeline(events) {
     currentTimeRow.style.width = "2px";
     currentTimeRow.style.height = "460px";
     currentTimeRow.innerHTML = `<div class="current-time-line"></div>
-      <div class="current-time-label" style="top:-32px;left:-40px;">${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}</div>`;
+      <div class="current-time-label" style="top:-32px;left:-40px;">${formatTime24h(now)}</div>`;
     scrollToCurrentTime(startDate);
   }
   renderCurrentTimeBar();
@@ -137,8 +146,12 @@ function renderTimeline(events) {
     bar.style.top = (60 + idx * 44) + "px";
     bar.style.width = width + "px";
     bar.style.height = "36px";
-    bar.innerHTML = `${ev.name} <span style="margin-left:8px;">${ev.duration || ""}</span>
-      <span style="margin-left:8px;font-size:0.9em;">${start.toLocaleString('vi-VN')} - ${end.toLocaleString('vi-VN')}</span>
+    bar.innerHTML = `${ev.name}
+      <span style="margin-left:8px;">${ev.duration || ""}</span>
+      <span style="margin-left:8px;font-size:0.9em;">
+        ${start.getDate()}/${start.getMonth()+1} ${formatTime24h(start)}
+        - ${end.getDate()}/${end.getMonth()+1} ${formatTime24h(end)}
+      </span>
       <button class="delete-btn" onclick="deleteEvent('${ev.id}')">Xóa</button>`;
 
     // Tooltip
