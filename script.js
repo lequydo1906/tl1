@@ -7,20 +7,20 @@ const firebaseConfig = {
       messagingSenderId: "732658035286",
       appId: "1:732658035286:web:40091d26eee343579aa9f7",
     };
-
-
+    
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
 // Timeline constants
-const pxPerDay = 40; // pixel cho mỗi ngày
+const pxPerDay = 40;
 const today = new Date();
-const startDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 15, 0, 0, 0, 0); // 15 ngày trước
-const endDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 15, 0, 0, 0, 0);   // 15 ngày sau
+const startDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 15, 0, 0, 0, 0);
+const endDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 15, 0, 0, 0, 0);
 const daysCount = Math.round((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
 const months = ["Tháng 1", "Tháng 2", "Tháng 3", "Tháng 4", "Tháng 5", "Tháng 6", "Tháng 7", "Tháng 8", "Tháng 9", "Tháng 10", "Tháng 11", "Tháng 12"];
 const weekdays = ["CN", "Th2", "Th3", "Th4", "Th5", "Th6", "Th7"];
 const timeline = document.getElementById('timeline');
+const timelineContainer = document.getElementById('timeline-container');
 
 // Helper
 function getDateByIndex(idx) {
@@ -74,9 +74,17 @@ function calcLeftPx(date) {
   return px;
 }
 
+// Auto scroll timeline container đến vị trí thời gian thực
+function scrollToCurrentTime() {
+  const now = new Date();
+  const left = calcLeftPx(now);
+  timelineContainer.scrollLeft = left - timelineContainer.clientWidth / 2 + pxPerDay;
+}
+
 // Render timeline
 function renderTimeline(events) {
   timeline.innerHTML = "";
+  timeline.style.width = (daysCount * pxPerDay) + "px";
 
   // 1. Dòng tháng/thứ/ngày (dùng flex cho mỗi dòng)
   ["month", "weekday", "date"].forEach((type, idx) => {
@@ -109,13 +117,10 @@ function renderTimeline(events) {
       if (type === "date") {
         const line = document.createElement('div');
         line.className = "timeline-day-line";
-        line.style.position = "absolute";
         line.style.left = "50%";
-        line.style.top = "16px"; // từ giữa số ngày
-        line.style.height = "calc(100% + 300px)"; // kéo xuống đủ qua các event-bar
+        line.style.top = "16px";
+        line.style.height = "calc(100% + 300px)";
         line.style.width = "1px";
-        line.style.background = "#444";
-        line.style.zIndex = "1";
         cell.appendChild(line);
       }
       row.appendChild(cell);
@@ -139,12 +144,15 @@ function renderTimeline(events) {
     }
     currentTimeRow.style.position = 'absolute';
     currentTimeRow.style.left = '0px';
-    currentTimeRow.style.top = (3 * 32) + 'px'; // dưới dòng ngày
+    currentTimeRow.style.top = (3 * 32) + 'px';
     currentTimeRow.style.height = '0px';
     currentTimeRow.style.width = (daysCount * pxPerDay) + 'px';
     currentTimeRow.style.zIndex = '10';
-    currentTimeRow.innerHTML = `<span class="current-time-label" style="left:${left}px;top:-24px;position:absolute;">${currentTimeLabel}</span>
-      <div class="current-time-line" style="left:${left}px;top:0px;position:absolute;width:2px;height:400px;background:#FFD600;"></div>`;
+    currentTimeRow.innerHTML = `<span class="current-time-label" style="left:${left}px;top:-24px;">${currentTimeLabel}</span>
+      <div class="current-time-line" style="left:${left}px;top:0px;width:2px;height:400px;"></div>`;
+
+    // Auto scroll đến vị trí thời gian thực mỗi lần cập nhật
+    scrollToCurrentTime();
   }
   renderCurrentTimeBar();
   if (window.__timelineTimer) clearInterval(window.__timelineTimer);

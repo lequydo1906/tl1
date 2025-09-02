@@ -12,18 +12,50 @@ form { margin: 20px; display: flex; gap: 8px; flex-wrap: wrap; }
 
 #timeline {
   position: relative;
-  width: calc(40px * 38); /* 38 ngày, mỗi ngày là 40px */
   min-width: 800px;
   min-height: 500px;
-  margin: 0 auto;
 }
 
 .timeline-row { display: flex; }
-.month { width: 600px; text-align: left; font-weight: bold; font-size: 1.2em; color: #FFD600; margin-right: 40px;}
+.month { width: 40px; text-align: center; font-weight: bold; font-size: 1.2em; color: #FFD600; }
 .weekday, .date { width: 40px; text-align: center; color: #aaa; font-size: 1em; }
-.current-time-row { position: absolute; left: 0; top: 96px; height: 0; width: 100%; z-index: 10; pointer-events: none;}
-.current-time-label { position: absolute; background: #fff; color: #222; padding: 2px 8px; border-radius: 6px; font-weight: bold; font-size: 0.9em; white-space: nowrap; transform: translate(-50%, -100%);}
-.current-time-line { position: absolute; width: 2px; height: 400px; background: #fff; z-index: 10; top: 22px;}
+
+.timeline-day-line {
+  pointer-events: none;
+  background: #444;
+  z-index: 1;
+  width: 1px;
+  position: absolute;
+}
+
+.current-time-row {
+  position: absolute;
+  left: 0;
+  top: 96px;
+  height: 0;
+  width: 100%;
+  z-index: 10;
+  pointer-events: none;
+}
+.current-time-label {
+  position: absolute;
+  background: #fff;
+  color: #222;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-weight: bold;
+  font-size: 0.9em;
+  white-space: nowrap;
+  transform: translate(-50%, -100%);
+}
+.current-time-line {
+  background: #FFD600 !important;
+  z-index: 10;
+  position: absolute;
+  width: 2px;
+  height: 400px;
+}
+
 .event-bar {
   position: absolute;
   height: 36px;
@@ -54,13 +86,4 @@ form { margin: 20px; display: flex; gap: 8px; flex-wrap: wrap; }
   font-weight: bold;
   opacity: 0.95;
   transition: opacity 0.15s;
-}
-.timeline-day-line {
-  pointer-events: none;
-  background: #444;
-  z-index: 1;
-}
-.current-time-line {
-  background: #FFD600 !important;
-  z-index: 10;
 }
