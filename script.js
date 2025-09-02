@@ -78,25 +78,54 @@ function fixEndTime(end, start) {
   return end;
 }
 
-function renderTimeline(events) {
-  const { startDate, endDate } = getStartEndDate();
-  const daysCount = getDaysCount(startDate, endDate);
-  timeline.innerHTML = "";
-  timeline.style.width = (daysCount * pxPerDay) + "px";
+function renderEvent(ev, idx) {
+  const start = ev.start.toDate();
+  const end = ev.end.toDate();
 
-  // Đường kẻ dọc + số ngày nằm trên đầu đường kẻ
-  for (let i = 0; i < daysCount; i++) {
-    const date = getDateByIndex(i, startDate);
+  // Vị trí bắt đầu (tính số ngày, có thể thập phân)
+  const left = ((start - startDate) / 86400000) * pxPerDay;
+  // Vị trí kết thúc (tính số ngày, có thể thập phân)
+  let right = ((end - startDate) / 86400000) * pxPerDay;
 
-    // Đường kẻ dọc ngày tại đúng vị trí 0h
-    const line = document.createElement('div');
-    line.className = "timeline-day-line";
-    line.style.position = "absolute";
-    line.style.left = (i * pxPerDay) + "px";
-    line.style.top = "40px";
-    line.style.height = "460px";
-    line.style.width = "1px";
-    timeline.appendChild(line);
+  // Nếu end chính xác là 0h, thì kết thúc sát cuối ngày trước
+  if (
+    end.getHours() === 0 &&
+    end.getMinutes() === 0 &&
+    end.getSeconds() === 0 &&
+    end > start
+  ) {
+    right -= 2; // Trừ 2px để dừng sát đường kẻ ngày, không qua ngày tiếp theo
+  }
+
+  const width = Math.max(right - left, 4); // Không âm, tối thiểu 4px
+
+  const div = document.createElement("div");
+  div.className = "event";
+  div.style.left = left + "px";
+  div.style.top = 50 + idx * 40 + "px";
+  div.style.width = width + "px";
+  div.textContent = ev.title;
+
+  div.addEventListener("mousemove", e => {
+    const now = new Date();
+    const diff = end - now;
+    if (diff > 0) {
+      const hrs = Math.floor(diff / 3600000);
+      const mins = Math.floor((diff % 3600000) / 60000);
+      const secs = Math.floor((diff % 60000) / 1000);
+      tooltip.textContent = `Còn lại ${hrs}h ${mins}m ${secs}s`;
+    } else {
+      tooltip.textContent = "Đã kết thúc";
+    }
+    tooltip.style.display = "block";
+    tooltip.style.left = (e.pageX + 10) + "px";
+    tooltip.style.top = (e.pageY - 20) + "px";
+  });
+  div.addEventListener("mouseleave", () => {
+    tooltip.style.display = "none";
+  });
+  timeline.appendChild(div);
+}
 
     // Số ngày nằm trên đầu đường kẻ
     const num = document.createElement('div');
