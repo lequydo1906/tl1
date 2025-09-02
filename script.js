@@ -8,11 +8,10 @@ const firebaseConfig = {
       appId: "1:732658035286:web:40091d26eee343579aa9f7",
     };
 
-
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-const pxPerDay = Math.floor(window.innerWidth / 14); // mỗi ngày chiếm 1/14 màn hình
+const pxPerDay = Math.floor(window.innerWidth / 14);
 
 function getToday() {
   const now = new Date();
@@ -20,7 +19,6 @@ function getToday() {
 }
 function getStartEndDate() {
   const today = getToday();
-  // hôm nay ở giữa, hiển thị 14 ngày (7 trước, 6 sau)
   const startDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 7, 0, 0, 0, 0);
   const endDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 6, 0, 0, 0, 0);
   return { startDate, endDate };
@@ -32,7 +30,6 @@ function getDaysCount(startDate, endDate) {
 const timeline = document.getElementById('timeline');
 const timelineContainer = document.getElementById('timeline-container');
 
-// Helper
 function getDateByIndex(idx, startDate) {
   return new Date(startDate.getTime() + idx * 24 * 60 * 60 * 1000);
 }
@@ -73,14 +70,13 @@ function scrollToCurrentTime(startDate) {
   timelineContainer.scrollLeft = left - timelineContainer.clientWidth / 2 + pxPerDay;
 }
 
-// Luôn render timeline 14 ngày, kể cả không có sự kiện
 function renderTimeline(events) {
   const { startDate, endDate } = getStartEndDate();
   const daysCount = getDaysCount(startDate, endDate);
   timeline.innerHTML = "";
   timeline.style.width = (daysCount * pxPerDay) + "px";
 
-  // 1. Cột ngày + đường kẻ dọc (đặt vào giữa số ngày, vị trí chính là 0h)
+  // 1. Cột ngày
   for (let i = 0; i < daysCount; i++) {
     const date = getDateByIndex(i, startDate);
     const cell = document.createElement('div');
@@ -96,20 +92,19 @@ function renderTimeline(events) {
     timeline.appendChild(cell);
   }
 
-  // Đường kẻ dọc ngày (0h) vào giữa số ngày
+  // 2. Đường kẻ dọc ngày (0h) đặt ở đầu cột
   for (let i = 0; i < daysCount; i++) {
     const line = document.createElement('div');
     line.className = "timeline-day-line";
-    // Căn giữa số ngày: left = vị trí cột + pxPerDay/2
     line.style.position = "absolute";
-    line.style.left = (i * pxPerDay + pxPerDay / 2) + "px";
+    line.style.left = (i * pxPerDay) + "px"; // <-- Đúng 0h đầu ngày
     line.style.top = "40px";
     line.style.height = "460px";
     line.style.width = "1px";
     timeline.appendChild(line);
   }
 
-  // 2. Đường chỉ thời gian hiện tại (24h format)
+  // 3. Đường chỉ thời gian hiện tại (24h format)
   function renderCurrentTimeBar() {
     const now = new Date();
     const left = calcLeftPx(now, startDate);
@@ -131,7 +126,7 @@ function renderTimeline(events) {
   if (window.__timelineTimer) clearInterval(window.__timelineTimer);
   window.__timelineTimer = setInterval(renderCurrentTimeBar, 1000);
 
-  // 3. Event-bar
+  // 4. Event-bar
   timeline.querySelectorAll(".event-bar").forEach(e => e.remove());
   document.querySelectorAll('.event-tooltip').forEach(el => el.remove());
   events.forEach((ev, idx) => {
