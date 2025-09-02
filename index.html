@@ -1,37 +1,37 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8">
-  <title>Dòng thời gian sự kiện</title>
-  <link rel="stylesheet" href="timeline.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sự kiện Wuthering Waves</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="timeline-container">
-    <h1 class="timeline-title">Dòng thời gian sự kiện</h1>
-    <p class="timeline-desc">
-      Xem các sự kiện của Wuthering Waves theo giờ địa phương hoặc <a href="#">giờ của máy chủ</a> khác.
-    </p>
-    <div class="timeline-toolbar">
-      <select id="region-select">
-        <option>Châu Á, Đông Nam Á, Đài Loan/ Hồng Kông/ Ma...</option>
-      </select>
-      <label>
-        <input type="checkbox" checked>
-        Hiện thời gian được điều chỉnh dựa trên giờ địa phương <span class="timezone">(Asia/Bangkok)</span>
-      </label>
-    </div>
-    <div class="timeline-main">
-      <!-- Header months -->
-      <div class="timeline-months">
-        <div class="month-label">Tháng 8</div>
-        <div class="month-label">Tháng 9</div>
-      </div>
-      <!-- Days grid -->
-      <div class="timeline-days" id="timeline-days"></div>
-      <!-- Events -->
-      <div class="timeline-events" id="timeline-events"></div>
-    </div>
-  </div>
-  <script src="timeline.js"></script>
+    <header>
+        <h1>Thời Gian Sự Kiện</h1>
+    </header>
+
+    <main>
+        <div id="event-form-container">
+            <h2>Thêm Sự Kiện Mới</h2>
+            <form id="event-form">
+                <label for="event-name">Tên Sự Kiện:</label>
+                <input type="text" id="event-name" required>
+
+                <label for="event-time">Thời Gian (hh:mm):</label>
+                <input type="time" id="event-time" required>
+
+                <button type="submit">Thêm Sự Kiện</button>
+            </form>
+        </div>
+
+        <div id="event-list-container">
+            <h2>Các Sự Kiện Sắp Tới</h2>
+            <ul id="event-list">
+                </ul>
+        </div>
+    </main>
+
+    <script type="module" src="script.js"></script>
 </body>
 </html>

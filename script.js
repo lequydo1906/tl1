@@ -1,131 +1,118 @@
-// Số ngày/tháng demo
-const months = [
-  { name: "Tháng 8", days: [17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31] },
-  { name: "Tháng 9", days: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23] }
-];
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, addDoc, getDocs, onSnapshot, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-// Ngày trong tuần
-const weekDays = ['CN', 'Th2', 'Th3', 'Th4', 'Th5', 'Th6', 'Th7'];
+// Cấu hình Firebase của bạn
+// Thay thế bằng cấu hình của dự án Firebase của bạn
+const firebaseConfig = {
+      apiKey: "AIzaSyDR8_kXFXR_oWGNptZX_infNrWTm3xbPAM",
+      authDomain: "timeline-43aac.firebaseapp.com",
+      projectId: "timeline-43aac",
+      storageBucket: "timeline-43aac.firebasestorage.app",
+      messagingSenderId: "732658035286",
+      appId: "1:732658035286:web:40091d26eee343579aa9f7",
+    };
 
-// Sự kiện mẫu
-const events = [
-  {
-    name: "Eternal Radiance on the Crown - Augusta Banner",
-    color: "red",
-    start: { month: 1, day: 2 },
-    end: { month: 1, day: 17 },
-    img: "https://static.wikia.nocookie.net/genshin-impact/images/6/68/Augusta.png",
-    tag: "15d"
-  },
-  {
-    name: "Thunderflare Dominion - Augusta Weapon Banner",
-    color: "brown",
-    start: { month: 1, day: 2 },
-    end: { month: 1, day: 17 },
-    img: "https://static.wikia.nocookie.net/genshin-impact/images/5/5c/Weapon_Augusta.png",
-    tag: "15d"
-  },
-  {
-    name: "When Silence Tolls - Carlotta Banner",
-    color: "green",
-    start: { month: 1, day: 2 },
-    end: { month: 1, day: 17 },
-    img: "https://static.wikia.nocookie.net/genshin-impact/images/2/22/Carlotta.png",
-    tag: "15d"
-  },
-  {
-    name: "The Last Dance: Carlotta Weapon Banner",
-    color: "pink",
-    start: { month: 1, day: 2 },
-    end: { month: 1, day: 17 },
-    img: "https://static.wikia.nocookie.net/genshin-impact/images/2/22/Carlotta.png",
-    tag: "15d"
-  },
-  {
-    name: "Till the Sea Turns Clear - Shorekeeper Banner",
-    color: "blue",
-    start: { month: 1, day: 2 },
-    end: { month: 1, day: 17 },
-    img: "https://static.wikia.nocookie.net/genshin-impact/images/1/1a/Shorekeeper.png",
-    tag: "15d"
-  },
-  {
-    name: "Stellar Symphony - Shorekeeper Weapon Banner",
-    color: "purple",
-    start: { month: 1, day: 2 },
-    end: { month: 1, day: 17 },
-    img: "https://static.wikia.nocookie.net/genshin-impact/images/1/1a/Shorekeeper.png",
-    tag: "15d"
-  },
-];
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const eventCol = collection(db, "events");
 
-// Render grid ngày
-function renderDays() {
-  const daysDiv = document.getElementById('timeline-days');
-  daysDiv.innerHTML = '';
-  months.forEach((m) => {
-    m.days.forEach((day, idx) => {
-      const weekDay = weekDays[(day + 2) % 7]; // Tạm gán ngày trong tuần
-      daysDiv.innerHTML += `<div class="day-cell"><div>${weekDay}</div><strong>${day}</strong></div>`;
+const eventForm = document.getElementById("event-form");
+const eventList = document.getElementById("event-list");
+
+// Lắng nghe sự kiện submit form để thêm sự kiện mới
+eventForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const eventName = document.getElementById("event-name").value;
+    const eventTime = document.getElementById("event-time").value;
+    const now = new Date();
+    const [hours, minutes] = eventTime.split(":");
+    const scheduledTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hours, minutes, 0);
+
+    // Lưu sự kiện vào Firestore
+    try {
+        await addDoc(eventCol, {
+            name: eventName,
+            time: scheduledTime.toISOString(),
+            createdAt: new Date().toISOString()
+        });
+        eventForm.reset();
+        alert("Sự kiện đã được thêm thành công!");
+    } catch (error) {
+        console.error("Lỗi khi thêm sự kiện: ", error);
+        alert("Có lỗi xảy ra, vui lòng thử lại.");
+    }
+});
+
+// Hiển thị sự kiện từ Firestore và cập nhật theo thời gian thực
+onSnapshot(eventCol, (snapshot) => {
+    const events = [];
+    snapshot.forEach(doc => {
+        events.push({ id: doc.id, ...doc.data() });
     });
-  });
-}
-renderDays();
+    renderEvents(events);
+});
 
-// Tính vị trí cho mỗi ngày
-function getDayPos(monthIdx, dayIdx) {
-  let pos = 0;
-  for (let i = 0; i < monthIdx; i++) pos += months[i].days.length;
-  pos += dayIdx;
-  return pos;
+function renderEvents(events) {
+    eventList.innerHTML = "";
+    const now = new Date();
+    events.sort((a, b) => new Date(a.time) - new Date(b.time));
+
+    events.forEach(event => {
+        const scheduledTime = new Date(event.time);
+        
+        // Bỏ qua các sự kiện đã qua
+        if (scheduledTime < now) return;
+
+        const listItem = document.createElement("li");
+        listItem.classList.add("event-item");
+
+        const detailsDiv = document.createElement("div");
+        detailsDiv.classList.add("event-details");
+        detailsDiv.innerHTML = `
+            <h3>${event.name}</h3>
+            <p>Vào lúc: ${scheduledTime.toLocaleTimeString("vi-VN", { hour: '2-digit', minute: '2-digit' })}</p>
+        `;
+        listItem.appendChild(detailsDiv);
+
+        // Hiển thị đồng hồ đếm ngược
+        const countdownSpan = document.createElement("span");
+        countdownSpan.classList.add("countdown");
+        listItem.appendChild(countdownSpan);
+
+        // Nút xóa sự kiện
+        const deleteButton = document.createElement("button");
+        deleteButton.textContent = "Xóa";
+        deleteButton.onclick = () => deleteEvent(event.id);
+        listItem.appendChild(deleteButton);
+        
+        eventList.appendChild(listItem);
+        
+        // Cập nhật đồng hồ đếm ngược mỗi giây
+        const updateCountdown = setInterval(() => {
+            const timeRemaining = scheduledTime - new Date();
+            if (timeRemaining <= 0) {
+                countdownSpan.textContent = "Đã diễn ra!";
+                clearInterval(updateCountdown);
+                listItem.style.opacity = 0.5; // Làm mờ sự kiện đã qua
+            } else {
+                const hours = Math.floor(timeRemaining / (1000 * 60 * 60));
+                const minutes = Math.floor((timeRemaining % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((timeRemaining % (1000 * 60)) / 1000);
+                countdownSpan.textContent = `Còn lại: ${hours}h ${minutes}m ${seconds}s`;
+            }
+        }, 1000);
+    });
 }
 
-// Render các event
-function renderEvents() {
-  const eventsDiv = document.getElementById('timeline-events');
-  eventsDiv.innerHTML = '';
-  events.forEach((event, i) => {
-    // Tính vị trí
-    const startMonthIdx = event.start.month - 1;
-    const endMonthIdx = event.end.month - 1;
-    const startDayIdx = months[startMonthIdx].days.indexOf(event.start.day);
-    const endDayIdx = months[endMonthIdx].days.indexOf(event.end.day);
-    const totalDays = months.reduce((sum, m) => sum + m.days.length, 0);
-    const left = (getDayPos(startMonthIdx, startDayIdx) / totalDays) * 99.5;
-    const width = ((getDayPos(endMonthIdx, endDayIdx) - getDayPos(startMonthIdx, startDayIdx) + 1) / totalDays) * 99.5;
-    const top = 12 + i * 44;
-    eventsDiv.innerHTML += `
-      <div class="event-bar ${event.color}" style="left: ${left}%; width: ${width}%; top: ${top}px;">
-        ${event.name}
-        <span class="event-tag">${event.tag}</span>
-        <img class="event-image" src="${event.img}" alt="">
-      </div>
-    `;
-  });
+// Xóa sự kiện khỏi Firestore
+async function deleteEvent(id) {
+    if (confirm("Bạn có chắc chắn muốn xóa sự kiện này?")) {
+        try {
+            await deleteDoc(doc(db, "events", id));
+            alert("Sự kiện đã được xóa.");
+        } catch (error) {
+            console.error("Lỗi khi xóa sự kiện: ", error);
+            alert("Có lỗi xảy ra khi xóa.");
+        }
+    }
 }
-renderEvents();
-
-// Hiện dòng thời gian hiện tại
-function renderCurrentTimeLine() {
-  const eventsDiv = document.getElementById('timeline-events');
-  const now = new Date();
-  // Demo: giả sử ngày hiện tại là 2/9
-  const curMonthIdx = 1;
-  const curDayIdx = months[curMonthIdx].days.indexOf(2);
-  const totalDays = months.reduce((sum, m) => sum + m.days.length, 0);
-  const left = (getDayPos(curMonthIdx, curDayIdx) / totalDays) * 99.5;
-  // Giờ demo
-  const curTime = "20:23:47";
-  const line = document.createElement('div');
-  line.className = 'current-time-line';
-  line.style.left = left + '%';
-  line.innerHTML = `<div class="current-time-label" style="left: 50%;">${curTime}</div>`;
-  eventsDiv.appendChild(line);
-  // Gắn label
-  const label = document.createElement('div');
-  label.className = 'current-time-label';
-  label.style.left = left + '%';
-  label.innerText = curTime;
-  eventsDiv.appendChild(label);
-}
-renderCurrentTimeLine();
