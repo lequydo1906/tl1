@@ -70,6 +70,14 @@ function scrollToCurrentTime(startDate) {
   timelineContainer.scrollLeft = left - timelineContainer.clientWidth / 2 + pxPerDay;
 }
 
+// Sửa lại điểm kết thúc event-bar nếu là 0h
+function fixEndTime(end, start) {
+  if (end.getHours() === 0 && end.getMinutes() === 0 && end.getSeconds() === 0 && end > start) {
+    return new Date(end.getFullYear(), end.getMonth(), end.getDate(), 23, 59, 59);
+  }
+  return end;
+}
+
 function renderTimeline(events) {
   const { startDate, endDate } = getStartEndDate();
   const daysCount = getDaysCount(startDate, endDate);
@@ -94,7 +102,7 @@ function renderTimeline(events) {
     const num = document.createElement('div');
     num.className = "date-col";
     num.style.position = 'absolute';
-    num.style.left = (i * pxPerDay - 15) + 'px'; // Canh giữa số với đường kẻ
+    num.style.left = (i * pxPerDay - 15) + 'px';
     num.style.top = "0px";
     num.innerText = date.getDate();
     timeline.appendChild(num);
@@ -127,7 +135,8 @@ function renderTimeline(events) {
   document.querySelectorAll('.event-tooltip').forEach(el => el.remove());
   events.forEach((ev, idx) => {
     const start = ev.startTime ? new Date(ev.startTime) : new Date(ev.start);
-    const end = ev.endTime ? new Date(ev.endTime) : new Date(ev.end || ev.start);
+    let end = ev.endTime ? new Date(ev.endTime) : new Date(ev.end || ev.start);
+    end = fixEndTime(end, start);
     const left = calcLeftPx(start, startDate);
     const right = calcLeftPx(end, startDate);
     const width = Math.max(right - left, 4);
