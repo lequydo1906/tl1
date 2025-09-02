@@ -25,89 +25,70 @@ const timeline = document.getElementById('timeline');
 function getDateByIndex(idx) {
   return new Date(startDate.getTime() + idx * 24 * 60 * 60 * 1000);
 }
-function getDateIndexFromDate(dateStr) {
-  const date = new Date(dateStr);
+function getDateIndexFromDate(date) {
+  if (!(date instanceof Date)) date = new Date(date);
   return Math.floor((date - startDate) / (1000 * 60 * 60 * 24));
 }
-function getTimeRemaining(endTime) {
-  const now = new Date();
-  const end = new Date(endTime);
-  let diff = end - now;
-  if (diff <= 0) return "Đã kết thúc";
-  let months = Math.floor(diff / (1000 * 60 * 60 * 24 * 30));
-  diff -= months * (1000 * 60 * 60 * 24 * 30);
-  let days = Math.floor(diff / (1000 * 60 * 60 * 24));
-  diff -= days * (1000 * 60 * 60 * 24);
-  let hours = Math.floor(diff / (1000 * 60 * 60));
-  diff -= hours * (1000 * 60 * 60);
-  let minutes = Math.floor(diff / (1000 * 60));
-  diff -= minutes * (1000 * 60);
-  let seconds = Math.floor(diff / 1000);
 
-  let parts = [];
-  if (months > 0) parts.push(months + " tháng");
-  if (days > 0) parts.push(days + " ngày");
-  if (hours > 0) parts.push(hours + " giờ");
-  if (minutes > 0) parts.push(minutes + " phút");
-  parts.push(seconds + " giây");
-  return parts.join(" ");
+// Tính left theo thời gian (có giờ, phút, giây)
+function calcLeftPx(date) {
+  if (!(date instanceof Date)) date = new Date(date);
+  const dayIdx = getDateIndexFromDate(date);
+  const hour = date.getHours();
+  const minute = date.getMinutes();
+  const second = date.getSeconds();
+  let px = dayIdx * pxPerDay;
+  px += hour * pxPerDay / 24;
+  px += minute * pxPerDay / 24 / 60;
+  px += second * pxPerDay / 24 / 3600;
+  return px;
 }
 
 // Render timeline
 function renderTimeline(events) {
   timeline.innerHTML = "";
 
-  // 1. Dòng tháng
-  const monthRow = document.createElement('div');
-  monthRow.className = "timeline-row";
-  monthRow.style.display = 'flex';
-  for (let i = 0; i < daysCount; i++) {
-    const date = getDateByIndex(i);
-    const monthDiv = document.createElement('div');
-    monthDiv.style.width = pxPerDay + 'px';
-    monthDiv.style.textAlign = 'center';
-    monthDiv.style.fontWeight = (i === 0 || i === 15) ? 'bold' : '';
-    monthDiv.style.color = (i === 0 || i === 15) ? '#FFD600' : '#aaa';
-    monthDiv.style.fontSize = (i === 0 || i === 15) ? '1.2em' : '0.9em';
-    monthDiv.innerText = (i === 0) ? months[0] : (i === 15) ? months[1] : '';
-    monthRow.appendChild(monthDiv);
-  }
-  timeline.appendChild(monthRow);
+  // 1. Dòng tháng/thứ/ngày
+  ["month", "weekday", "date"].forEach((type, idx) => {
+    const row = document.createElement('div');
+    row.className = "timeline-row";
+    row.style.display = 'flex';
+    for (let i = 0; i < daysCount; i++) {
+      const date = getDateByIndex(i);
+      const cell = document.createElement('div');
+      cell.style.width = pxPerDay + 'px';
+      cell.style.textAlign = 'center';
+      if (type === "month") {
+        cell.style.fontWeight = (i === 0 || i === 15) ? 'bold' : '';
+        cell.style.color = (i === 0 || i === 15) ? '#FFD600' : '#aaa';
+        cell.style.fontSize = (i === 0 || i === 15) ? '1.2em' : '0.9em';
+        cell.innerText = (i === 0) ? months[0] : (i === 15) ? months[1] : '';
+      }
+      if (type === "weekday") cell.innerText = weekdays[date.getDay()];
+      if (type === "date") cell.innerText = date.getDate();
+      row.appendChild(cell);
+    }
+    timeline.appendChild(row);
+  });
 
-  // 2. Dòng thứ
-  const weekdayRow = document.createElement('div');
-  weekdayRow.className = "timeline-row";
-  weekdayRow.style.display = 'flex';
-  for (let i = 0; i < daysCount; i++) {
-    const date = getDateByIndex(i);
-    const dayDiv = document.createElement('div');
-    dayDiv.style.width = pxPerDay + 'px';
-    dayDiv.style.textAlign = 'center';
-    dayDiv.style.color = '#aaa';
-    dayDiv.innerText = weekdays[date.getDay()];
-    weekdayRow.appendChild(dayDiv);
+  // 2. Render các đường kẻ dọc cho từng ngày
+  for (let i = 0; i <= daysCount; i++) {
+    const line = document.createElement('div');
+    line.className = "timeline-day-line";
+    line.style.position = "absolute";
+    line.style.left = (i * pxPerDay) + "px";
+    line.style.top = "0";
+    line.style.height = "100%";
+    line.style.width = "1px";
+    line.style.background = "#444";
+    line.style.zIndex = "1";
+    timeline.appendChild(line);
   }
-  timeline.appendChild(weekdayRow);
 
-  // 3. Dòng ngày
-  const dateRow = document.createElement('div');
-  dateRow.className = "timeline-row";
-  dateRow.style.display = 'flex';
-  for (let i = 0; i < daysCount; i++) {
-    const date = getDateByIndex(i);
-    const dateDiv = document.createElement('div');
-    dateDiv.style.width = pxPerDay + 'px';
-    dateDiv.style.textAlign = 'center';
-    dateDiv.style.color = '#aaa';
-    dateDiv.innerText = date.getDate();
-    dateRow.appendChild(dateDiv);
-  }
-  timeline.appendChild(dateRow);
-
-  // 4. Dòng giờ hiện tại + đường chỉ
+  // 3. Đường chỉ giờ hiện tại
   function renderCurrentTimeBar() {
     const now = new Date();
-    const idx = getDateIndexFromDate(now);
+    const left = calcLeftPx(now);
     const currentHour = now.getHours().toString().padStart(2, '0');
     const currentMinute = now.getMinutes().toString().padStart(2, '0');
     const currentSecond = now.getSeconds().toString().padStart(2, '0');
@@ -120,41 +101,40 @@ function renderTimeline(events) {
     }
     currentTimeRow.style.position = 'absolute';
     currentTimeRow.style.left = '0px';
-    currentTimeRow.style.top = (3 * 32) + 'px'; // sau 3 dòng
+    currentTimeRow.style.top = (3 * 32) + 'px'; // dưới dòng ngày
     currentTimeRow.style.height = '0px';
     currentTimeRow.style.width = (daysCount * pxPerDay) + 'px';
     currentTimeRow.style.zIndex = '10';
-    currentTimeRow.innerHTML = `<span class="current-time-label" style="left:${idx * pxPerDay + pxPerDay / 2}px;top:-24px;position:absolute;">${currentTimeLabel}</span>
-      <div class="current-time-line" style="left:${idx * pxPerDay + pxPerDay / 2}px;top:0px;position:absolute;"></div>`;
+    currentTimeRow.innerHTML = `<span class="current-time-label" style="left:${left}px;top:-24px;position:absolute;">${currentTimeLabel}</span>
+      <div class="current-time-line" style="left:${left}px;top:0px;position:absolute;width:2px;height:400px;background:#FFD600;"></div>`;
   }
   renderCurrentTimeBar();
   if (window.__timelineTimer) clearInterval(window.__timelineTimer);
   window.__timelineTimer = setInterval(renderCurrentTimeBar, 1000);
 
-  // 5. Event-bar: tuyệt đối, left/top tính toán chuẩn
+  // 4. Event-bar: left và width tính theo giờ/phút/giây
   timeline.querySelectorAll(".event-bar").forEach(e => e.remove());
   document.querySelectorAll('.event-tooltip').forEach(el => el.remove());
   events.forEach((ev, row) => {
     const start = ev.startTime ? new Date(ev.startTime) : new Date(ev.start);
     const end = ev.endTime ? new Date(ev.endTime) : new Date(ev.end || ev.start);
 
-    const diffStart = Math.max(0, getDateIndexFromDate(start));
-    const diffEnd = Math.min(daysCount - 1, getDateIndexFromDate(end));
-    const left = diffStart * pxPerDay;
-    const width = Math.max((diffEnd - diffStart + 1) * pxPerDay, pxPerDay / 2);
+    const left = calcLeftPx(start);
+    const right = calcLeftPx(end);
+    const width = Math.max(right - left, 4);
 
     const bar = document.createElement('div');
     bar.className = `event-bar ${ev.color || ""}`;
     bar.style.position = 'absolute';
     bar.style.left = left + "px";
-    bar.style.top = (3 * 32 + 16 + row * 44) + "px"; // sau 3 dòng + margin + row
+    bar.style.top = (3 * 32 + 16 + row * 44) + "px";
     bar.style.width = width + "px";
     bar.style.zIndex = "3";
     bar.style.height = "36px";
     // Thông tin sự kiện
     const startTimeShow = start.toLocaleString('vi-VN');
     const endTimeShow = end.toLocaleString('vi-VN');
-    bar.innerHTML = `${ev.name} <span style="margin-left:8px;">${ev.duration || (diffEnd - diffStart + 1)}d</span>
+    bar.innerHTML = `${ev.name} <span style="margin-left:8px;">${ev.duration || ""}</span>
       <span style="margin-left:8px;font-size:0.9em;">${startTimeShow} - ${endTimeShow}</span>
       <button class="delete-btn" onclick="deleteEvent('${ev.id}')">Xóa</button>`;
 

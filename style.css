@@ -55,3 +55,10 @@ form { margin: 20px; display: flex; gap: 8px; flex-wrap: wrap; }
   opacity: 0.95;
   transition: opacity 0.15s;
 }
+.timeline-day-line {
+  pointer-events: none;
+}
+.current-time-line {
+  background: #FFD600 !important;
+  z-index: 5;
+}
