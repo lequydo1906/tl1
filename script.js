@@ -76,24 +76,11 @@ function renderTimeline(events) {
   timeline.innerHTML = "";
   timeline.style.width = (daysCount * pxPerDay) + "px";
 
-  // 1. Cột ngày
+  // 1. Đường kẻ dọc ngày (0h) đặt ở đầu cột và số ngày nằm trên đầu đường kẻ
   for (let i = 0; i < daysCount; i++) {
     const date = getDateByIndex(i, startDate);
-    const cell = document.createElement('div');
-    cell.className = "date-col";
-    cell.style.left = (i * pxPerDay) + 'px';
-    cell.style.top = "0px";
-    cell.style.width = pxPerDay + 'px';
-    cell.style.height = "40px";
-    cell.style.lineHeight = "40px";
-    cell.style.textAlign = "center";
-    cell.innerText = date.getDate();
 
-    timeline.appendChild(cell);
-  }
-
-  // 2. Đường kẻ dọc ngày (0h) đặt ở đầu cột
-  for (let i = 0; i < daysCount; i++) {
+    // Đường kẻ dọc
     const line = document.createElement('div');
     line.className = "timeline-day-line";
     line.style.position = "absolute";
@@ -102,9 +89,22 @@ function renderTimeline(events) {
     line.style.height = "460px";
     line.style.width = "1px";
     timeline.appendChild(line);
+
+    // Số ngày
+    const num = document.createElement('div');
+    num.className = "date-col";
+    num.style.position = 'absolute';
+    num.style.left = (i * pxPerDay - 15) + 'px'; // Canh giữa số với đường kẻ (sửa lại số nếu cần)
+    num.style.top = "0px";
+    num.style.width = "30px";
+    num.style.height = "40px";
+    num.style.lineHeight = "40px";
+    num.style.textAlign = "center";
+    num.innerText = date.getDate();
+    timeline.appendChild(num);
   }
 
-  // 3. Đường chỉ thời gian hiện tại (24h format)
+  // 2. Đường chỉ thời gian hiện tại (24h format)
   function renderCurrentTimeBar() {
     const now = new Date();
     const left = calcLeftPx(now, startDate);
@@ -126,7 +126,7 @@ function renderTimeline(events) {
   if (window.__timelineTimer) clearInterval(window.__timelineTimer);
   window.__timelineTimer = setInterval(renderCurrentTimeBar, 1000);
 
-  // 4. Event-bar
+  // 3. Event-bar
   timeline.querySelectorAll(".event-bar").forEach(e => e.remove());
   document.querySelectorAll('.event-tooltip').forEach(el => el.remove());
   events.forEach((ev, idx) => {
