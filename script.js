@@ -144,13 +144,16 @@ function renderTimeline(events) {
     const start = ev.startTime ? new Date(ev.startTime) : new Date(ev.start);
     const end = ev.endTime ? new Date(ev.endTime) : new Date(ev.end || ev.start);
 
-        // Tính vị trí bắt đầu 
+    // Tính vị trí bắt đầu và ngày kết thúc
     const left = Math.max(0, Math.min(calcLeftPx(start, startDate), daysCount * pxPerDay));
+    const endDayIndex = getDateIndexFromDate(end, startDate);
     
-    // Tính chiều rộng dựa trên vị trí kết thúc
-    const rightPosition = calcLeftPx(end, startDate);
+    // Tính vị trí kết thúc theo thời gian trong ngày
+    const hourProgress = (end.getHours() + end.getMinutes()/60 + end.getSeconds()/3600) / 24;
+    const rightPosition = (endDayIndex * pxPerDay) + (hourProgress * pxPerDay);
     
-    const width = Math.max(Math.min(rightPosition - left, daysCount * pxPerDay - left), 4)
+    // Chiều rộng là khoảng cách từ điểm bắt đầu đến điểm kết thúc
+    const width = Math.max(Math.min(rightPosition - left, daysCount * pxPerDay - left), 4);
 
 
     const bar = document.createElement('div');
