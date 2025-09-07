@@ -159,6 +159,13 @@ function renderTimeline(events) {
   const viTriPhai = Math.max(0, Math.min(viTriKetThuc, soNgay * pixelMoiNgay));
   const chieuRong = Math.max(viTriPhai - viTriTrai, 4);
 
+    // Tính vị trí 0h của ngày bắt đầu và ngày kết thúc
+    const viTri0hBatDau = Math.floor(chiSoNgayBatDau) * pixelMoiNgay;
+    const viTri0hKetThuc = Math.floor(chiSoNgayKetThuc) * pixelMoiNgay;
+    // Vị trí hiện tại (now)
+    const bayGio = new Date();
+    const viTriHienTai = tinhViTriPixel(bayGio, ngayBatDau);
+
     // Log tạm thời để debug
     console.log('[DEBUG EVENT]', {
       name: ev.name,
@@ -167,13 +174,17 @@ function renderTimeline(events) {
       chiSoNgayBatDau,
       tyLeGioBatDau,
       viTriBatDau,
+      viTri0hBatDau,
       chiSoNgayKetThuc,
       tyLeGioKetThuc,
       viTriKetThuc,
+      viTri0hKetThuc,
       viTriTrai,
       viTriPhai,
-      chieuRong
+      chieuRong,
+      viTriHienTai
     });
+
 
   const thanh = document.createElement('div');
   thanh.className = `event-bar ${ev.color || ""}`;
