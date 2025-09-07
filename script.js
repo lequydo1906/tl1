@@ -168,15 +168,25 @@ function cuonDenGioHienTai(ngayBatDau) {
 
 // Thêm helper để format giá trị datetime-local từ ISO
 function toInputDatetimeLocal(iso) {
-  // Giữ nguyên giá trị ISO string, chỉ cắt phần milliseconds và timezone
-  return iso.slice(0, 16);
+  const date = new Date(iso);
+  const offset = date.getTimezoneOffset();
+  date.setMinutes(date.getMinutes() - offset);
+  return date.toISOString().slice(0, 16);
 }
 
 function renderTimeline(events) {
+  console.log('Rendering timeline with events:', events);
+  
   const { ngayBatDau, ngayKetThuc } = layNgayBatDauKetThuc();
   const soNgay = demSoNgay(ngayBatDau, ngayKetThuc);
   timeline.innerHTML = "";
   timeline.style.width = (soNgay * pixelMoiNgay) + "px";
+  
+  console.log('Timeline dimensions:', {
+    soNgay,
+    pixelMoiNgay,
+    totalWidth: soNgay * pixelMoiNgay
+  });
 
   // Đường kẻ dọc + số ngày nằm trên đầu đường kẻ
   for (let i = 0; i < soNgay; i++) {
@@ -232,6 +242,13 @@ function renderTimeline(events) {
     // Chuyển đổi thời gian bắt đầu và kết thúc thành Date
     const thoiGianBatDau = ev.startTime ? new Date(ev.startTime) : new Date(ev.start);
     const thoiGianKetThuc = ev.endTime ? new Date(ev.endTime) : new Date(ev.end || ev.start);
+    
+    console.log('Event being rendered:', {
+      name: ev.name,
+      startTime: thoiGianBatDau.toLocaleString(),
+      endTime: thoiGianKetThuc.toLocaleString(),
+      color: ev.color
+    }); // Debug event data
 
     // Tính vị trí phần trăm timeline
     const chiSoNgayBatDau = layIndexTuNgay(thoiGianBatDau, ngayBatDau);
@@ -487,6 +504,8 @@ document.getElementById('eventForm').onsubmit = function(e) {
     duration
   };
 
+  console.log('Submitting event:', data); // Debug data being sent
+
   const editId = document.getElementById('editId').value;
   if (editId) {
     db.collection("events").doc(editId).update(data).then(() => {
@@ -597,8 +616,8 @@ function showEventModal(ev, thoiGianBatDau, thoiGianKetThuc) {
 
       const formData = {
         name: document.getElementById('modalName').value,
-        startTime: modalStartTime,
-        endTime: modalEndTime,
+        startTime: new Date(modalStartTime).toISOString(),
+        endTime: new Date(modalEndTime).toISOString(),
         color: document.getElementById('modalColorCode').value,
         duration: Math.max(1, Math.round((new Date(modalEndTime) - new Date(modalStartTime)) / (1000 * 60 * 60 * 24)))
       };
