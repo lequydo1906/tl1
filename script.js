@@ -168,7 +168,8 @@ function cuonDenGioHienTai(ngayBatDau) {
 
 // Thêm helper để format giá trị datetime-local từ ISO
 function toInputDatetimeLocal(iso) {
-	return new Date(iso).toISOString().slice(0,16);
+  // Giữ nguyên giá trị ISO string, chỉ cắt phần milliseconds và timezone
+  return iso.slice(0, 16);
 }
 
 function renderTimeline(events) {
@@ -274,11 +275,21 @@ const widthPercent = Math.max(rightPercent - leftPercent, (4 / (khungTimeline.cl
     });
 
     const thanh = document.createElement('div');
-    thanh.className = `event-bar ${ev.color || ""}`;
+    thanh.className = 'event-bar';
     thanh.style.left = leftPercent + "%";
     thanh.style.top = (60 + idx * 44) + "px";
     thanh.style.width = widthPercent + "%";
     thanh.style.height = "36px";
+    
+    // Xử lý màu sắc
+    if (ev.color) {
+      if (ev.color.startsWith('#')) {
+        // Nếu là mã hex, set trực tiếp vào background
+        thanh.style.backgroundColor = ev.color;
+      } else {
+        // Nếu là tên màu cũ, thêm class
+        thanh.classList.add(ev.color);
+      }
 
     // Nội dung: tên + thời gian + nút xóa
     thanh.innerHTML = `<div class="event-title">${ev.name}</div>
@@ -471,8 +482,8 @@ document.getElementById('eventForm').onsubmit = function(e) {
   const data = {
     name: document.getElementById('name').value,
     color: document.getElementById('colorCode').value,
-    startTime: start.toISOString(),
-    endTime: end.toISOString(),
+    startTime: new Date(startTime).toISOString(),
+    endTime: new Date(endTime).toISOString(),
     duration
   };
 
@@ -586,8 +597,8 @@ function showEventModal(ev, thoiGianBatDau, thoiGianKetThuc) {
 
       const formData = {
         name: document.getElementById('modalName').value,
-        startTime: new Date(modalStartTime).toISOString(),
-        endTime: new Date(modalEndTime).toISOString(),
+        startTime: modalStartTime,
+        endTime: modalEndTime,
         color: document.getElementById('modalColorCode').value,
         duration: Math.max(1, Math.round((new Date(modalEndTime) - new Date(modalStartTime)) / (1000 * 60 * 60 * 24)))
       };

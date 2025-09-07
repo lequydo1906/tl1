@@ -132,21 +132,38 @@ form #colorCode {
 .event-bar {
   position: absolute;
   height: 36px;
-  display: flex; align-items: center; border-radius: 8px;
+  display: flex; 
+  align-items: center; 
+  border-radius: 8px;
   padding: 0 12px;
-  font-weight: bold; font-size: 1em; cursor: pointer;
+  font-weight: bold; 
+  font-size: 1em; 
+  cursor: pointer;
   z-index: 3;
   overflow: hidden;
   box-sizing: border-box;
   border: none;
   margin: 0;
+  background-color: #d32f2f; /* Default color */
+  color: #fff;
 }
-.red { background: #d32f2f; }
-.yellow { background: #fbc02d; color: #222; }
-.gray { background: #757575; }
-.pink { background: #e91e63; }
-.blue { background: #1976d2; }
-.indigo { background: #5c6bc0; }
+/* Legacy color classes */
+.event-bar.red { background-color: #d32f2f; }
+.event-bar.yellow { background-color: #fbc02d; color: #222; }
+.event-bar.gray { background-color: #757575; }
+.event-bar.pink { background-color: #e91e63; }
+.event-bar.blue { background-color: #1976d2; }
+.event-bar.indigo { background-color: #5c6bc0; }
+
+/* Ensure text color is visible on light backgrounds */
+.event-bar[style*="background-color: #fbc02d"],
+.event-bar[style*="background-color: #FFEB3B"],
+.event-bar[style*="background-color: #FFEE58"],
+.event-bar[style*="background-color: #FFF176"],
+.event-bar[style*="background-color: #FFF59D"],
+.event-bar[style*="background-color: #FFF9C4"] {
+  color: #222;
+}
 .delete-btn { margin-left: 10px; background: #fff; color: #d32f2f; border: none; border-radius: 4px; padding: 2px 8px; cursor: pointer;}
 .event-tooltip {
   position: absolute;
