@@ -145,25 +145,8 @@ function renderTimeline(events) {
     const thoiGianBatDau = ev.startTime ? new Date(ev.startTime) : new Date(ev.start);
     const thoiGianKetThuc = ev.endTime ? new Date(ev.endTime) : new Date(ev.end || ev.start);
 
-    // 1. Tính chỉ số ngày và vị trí đường kẻ dọc cho cả điểm bắt đầu và kết thúc
-    const chiSoNgayKetThuc = layIndexTuNgay(thoiGianKetThuc, ngayBatDau);
+    // Tính toán cho điểm bắt đầu
     const chiSoNgayBatDau = layIndexTuNgay(thoiGianBatDau, ngayBatDau);
-    
-    // 2. Lấy vị trí đường kẻ dọc của ngày hiện tại và ngày tiếp theo của điểm kết thúc
-    const viTriKeDauNgay = Math.floor(chiSoNgayKetThuc) * pixelMoiNgay;
-    const viTriKeCuoiNgay = (Math.floor(chiSoNgayKetThuc) + 1) * pixelMoiNgay;
-    
-    // 3. Tính tỷ lệ thời gian trong ngày (từ 0h đến 24h)
-    const tyLeGioKetThuc = (
-      thoiGianKetThuc.getHours() + 
-      thoiGianKetThuc.getMinutes()/60 + 
-      thoiGianKetThuc.getSeconds()/3600
-    ) / 24;
-    
-    // 4. Nội suy tuyến tính giữa hai đường kẻ dọc
-    const viTriKetThuc = viTriKeDauNgay + (viTriKeCuoiNgay - viTriKeDauNgay) * tyLeGioKetThuc;
-    
-    // 5. Tương tự cho điểm bắt đầu
     const viTriKeDauNgayBatDau = Math.floor(chiSoNgayBatDau) * pixelMoiNgay;
     const viTriKeCuoiNgayBatDau = (Math.floor(chiSoNgayBatDau) + 1) * pixelMoiNgay;
     const tyLeGioBatDau = (
@@ -171,7 +154,41 @@ function renderTimeline(events) {
       thoiGianBatDau.getMinutes()/60 + 
       thoiGianBatDau.getSeconds()/3600
     ) / 24;
-    const viTriBatDau = viTriKeDauNgayBatDau + (viTriKeCuoiNgayBatDau - viTriKeDauNgayBatDau) * tyLeGioBatDau;
+    
+    // Tính toán cho điểm kết thúc
+    const chiSoNgayKetThuc = layIndexTuNgay(thoiGianKetThuc, ngayBatDau);
+    const viTriKeDauNgayKetThuc = Math.floor(chiSoNgayKetThuc) * pixelMoiNgay;
+    const viTriKeCuoiNgayKetThuc = (Math.floor(chiSoNgayKetThuc) + 1) * pixelMoiNgay;
+    const tyLeGioKetThuc = (
+      thoiGianKetThuc.getHours() + 
+      thoiGianKetThuc.getMinutes()/60 + 
+      thoiGianKetThuc.getSeconds()/3600
+    ) / 24;
+
+    // Tính vị trí pixel chính xác
+    const viTriBatDauChinhXac = viTriKeDauNgayBatDau + 
+      (viTriKeCuoiNgayBatDau - viTriKeDauNgayBatDau) * tyLeGioBatDau;
+    const viTriKetThucChinhXac = viTriKeDauNgayKetThuc + 
+      (viTriKeCuoiNgayKetThuc - viTriKeDauNgayKetThuc) * tyLeGioKetThuc;
+
+    // Giới hạn trong phạm vi timeline
+    const viTriTrai = Math.max(0, Math.min(viTriBatDauChinhXac, soNgay * pixelMoiNgay));
+    const viTriPhai = Math.max(0, Math.min(viTriKetThucChinhXac, soNgay * pixelMoiNgay));
+    
+    // Chiều rộng tối thiểu 4px
+    const chieuRong = Math.max(viTriPhai - viTriTrai, 4);
+
+    // Log để debug
+    console.log('Debug thông tin:', {
+      suKien: ev.name,
+      thoiGianKetThuc: thoiGianKetThuc.toLocaleString(),
+      chiSoNgayKetThuc,
+      tyLeGioKetThuc,
+      viTriKeDauNgayKetThuc,
+      viTriKetThucChinhXac,
+      viTriPhai,
+      chieuRong
+    });
     
     // Đảm bảo vị trí nằm trong phạm vi timeline
     const viTriTrai = Math.max(0, Math.min(viTriBatDau, soNgay * pixelMoiNgay));
@@ -195,9 +212,9 @@ function renderTimeline(events) {
 
     const thanh = document.createElement('div');
     thanh.className = `event-bar ${ev.color || ""}`;
-    thanh.style.left = viTriTrai + "px";
+    thanh.style.left = viTriHienThi + "px";
     thanh.style.top = (60 + idx * 44) + "px";
-    thanh.style.width = chieuRong + "px";
+    thanh.style.width = doRong + "px";
     thanh.style.height = "36px";
 
     // Nội dung: tên + thời gian (ẩn mặc định) + nút sửa/xóa (ẩn mặc định, hiện khi hover)
