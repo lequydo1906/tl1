@@ -86,20 +86,20 @@ function toInputDatetimeLocal(iso) {
 }
 
 function renderTimeline(events) {
-  const { startDate, endDate } = getStartEndDate();
-  const daysCount = getDaysCount(startDate, endDate);
+  const { ngayBatDau, ngayKetThuc } = layNgayBatDauKetThuc();
+  const soNgay = demSoNgay(ngayBatDau, ngayKetThuc);
   timeline.innerHTML = "";
-  timeline.style.width = (daysCount * pxPerDay) + "px";
+  timeline.style.width = (soNgay * pixelMoiNgay) + "px";
 
   // Đường kẻ dọc + số ngày nằm trên đầu đường kẻ
-  for (let i = 0; i < daysCount; i++) {
-    const date = getDateByIndex(i, startDate);
+  for (let i = 0; i < soNgay; i++) {
+    const ngay = layNgayTheoIndex(i, ngayBatDau);
 
     // Đường kẻ dọc ngày tại đúng vị trí 0h
     const line = document.createElement('div');
     line.className = "timeline-day-line";
     line.style.position = "absolute";
-    line.style.left = (i * pxPerDay) + "px";
+    line.style.left = (i * pixelMoiNgay) + "px";
     line.style.top = "40px";
     line.style.height = "460px";
     line.style.width = "1px";
@@ -109,29 +109,29 @@ function renderTimeline(events) {
     const num = document.createElement('div');
     num.className = "date-col";
     num.style.position = 'absolute';
-    num.style.left = (i * pxPerDay - 15) + 'px'; // Canh giữa số với đường kẻ
+    num.style.left = (i * pixelMoiNgay - 15) + 'px'; // Canh giữa số với đường kẻ
     num.style.top = "0px";
-    num.innerText = date.getDate();
+    num.innerText = ngay.getDate();
     timeline.appendChild(num);
   }
 
   // Đường chỉ thời gian hiện tại (24h format)
   function renderCurrentTimeBar() {
-    const now = new Date();
-    const left = calcLeftPx(now, startDate);
-    let currentTimeRow = timeline.querySelector('.current-time-row');
-    if (!currentTimeRow) {
-      currentTimeRow = document.createElement('div');
-      currentTimeRow.className = "current-time-row";
-      timeline.appendChild(currentTimeRow);
+    const bayGio = new Date();
+    const viTriTrai = tinhViTriPixel(bayGio, ngayBatDau);
+    let dongThoiGianHienTai = timeline.querySelector('.current-time-row');
+    if (!dongThoiGianHienTai) {
+      dongThoiGianHienTai = document.createElement('div');
+      dongThoiGianHienTai.className = "current-time-row";
+      timeline.appendChild(dongThoiGianHienTai);
     }
-    currentTimeRow.style.left = left + "px";
-    currentTimeRow.style.top = "40px";
-    currentTimeRow.style.width = "2px";
-    currentTimeRow.style.height = "460px";
-    currentTimeRow.innerHTML = `<div class="current-time-line"></div>
-      <div class="current-time-label" style="top:-32px;left:-40px;">${formatTime24h(now)}</div>`;
-    scrollToCurrentTime(startDate);
+    dongThoiGianHienTai.style.left = viTriTrai + "px";
+    dongThoiGianHienTai.style.top = "40px";
+    dongThoiGianHienTai.style.width = "2px";
+    dongThoiGianHienTai.style.height = "460px";
+    dongThoiGianHienTai.innerHTML = `<div class="current-time-line"></div>
+      <div class="current-time-label" style="top:-32px;left:-40px;">${dinhDangGio24h(bayGio)}</div>`;
+    cuonDenGioHienTai(ngayBatDau);
   }
   renderCurrentTimeBar();
   if (window.__timelineTimer) clearInterval(window.__timelineTimer);
@@ -170,39 +170,39 @@ function renderTimeline(events) {
     const chieuRong = Math.max(viTriPhai - viTriTrai, 4);
 
 
-    const bar = document.createElement('div');
-    bar.className = `event-bar ${ev.color || ""}`;
-    bar.style.left = left + "px";
-    bar.style.top = (60 + idx * 44) + "px";
-    bar.style.width = width + "px";
-    bar.style.height = "36px";
+    const thanh = document.createElement('div');
+    thanh.className = `event-bar ${ev.color || ""}`;
+    thanh.style.left = viTriTrai + "px";
+    thanh.style.top = (60 + idx * 44) + "px";
+    thanh.style.width = chieuRong + "px";
+    thanh.style.height = "36px";
 
     // Nội dung: tên + thời gian (ẩn mặc định) + nút sửa/xóa (ẩn mặc định, hiện khi hover)
-    bar.innerHTML = `<div class="event-title">${ev.name}</div>
+    thanh.innerHTML = `<div class="event-title">${ev.name}</div>
       <span class="time-info" style="margin-left:8px;font-size:0.9em;">
-        ${start.getDate()}/${start.getMonth()+1} ${formatTime24h(start)}
-        - ${end.getDate()}/${end.getMonth()+1} ${formatTime24h(end)}
+        ${thoiGianBatDau.getDate()}/${thoiGianBatDau.getMonth()+1} ${dinhDangGio24h(thoiGianBatDau)}
+        - ${thoiGianKetThuc.getDate()}/${thoiGianKetThuc.getMonth()+1} ${dinhDangGio24h(thoiGianKetThuc)}
       </span>
       <button class="edit-btn" title="Sửa" onclick="(function(ev){ return function(e){ e.stopPropagation(); startEditEvent(ev); }})(JSON.parse('${JSON.stringify({ id: ev.id, name: ev.name, color: ev.color, startTime: ev.startTime || ev.start, endTime: ev.endTime || ev.end })}'))(event)">Sửa</button>
       <button class="delete-btn" onclick="(function(id){ return function(e){ e.stopPropagation(); if(confirm('Xóa sự kiện?')) deleteEvent(id); }} )('${ev.id}')(event)">Xóa</button>`;
 
     // Tooltip
-    const tooltip = document.createElement('div');
-    tooltip.className = "event-tooltip";
-    tooltip.style.display = "none";
-    document.body.appendChild(tooltip);
+    const nutGiup = document.createElement('div');
+    nutGiup.className = "event-tooltip";
+    nutGiup.style.display = "none";
+    document.body.appendChild(nutGiup);
 
-    bar.onmousemove = function(e) {
-      tooltip.innerText = getTimeRemaining(end);
-      tooltip.style.left = (e.pageX + 12) + "px";
-      tooltip.style.top = (e.pageY - 10) + "px";
-      tooltip.style.display = "block";
+    thanh.onmousemove = function(e) {
+      nutGiup.innerText = tinhThoiGianConLai(thoiGianKetThuc);
+      nutGiup.style.left = (e.pageX + 12) + "px";
+      nutGiup.style.top = (e.pageY - 10) + "px";
+      nutGiup.style.display = "block";
     };
-    bar.onmouseleave = function() {
-      tooltip.style.display = "none";
+    thanh.onmouseleave = function() {
+      nutGiup.style.display = "none";
     };
 
-    timeline.appendChild(bar);
+    timeline.appendChild(thanh);
   });
 }
 
