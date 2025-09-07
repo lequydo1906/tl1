@@ -1,37 +1,34 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sự kiện Wuthering Waves</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <title>Dòng thời gian sự kiện</title>
+  <link rel="stylesheet" href="style.css">
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
-    <header>
-        <h1>Thời Gian Sự Kiện</h1>
-    </header>
-
-    <main>
-        <div id="event-form-container">
-            <h2>Thêm Sự Kiện Mới</h2>
-            <form id="event-form">
-                <label for="event-name">Tên Sự Kiện:</label>
-                <input type="text" id="event-name" required>
-
-                <label for="event-time">Thời Gian (hh:mm):</label>
-                <input type="time" id="event-time" required>
-
-                <button type="submit">Thêm Sự Kiện</button>
-            </form>
-        </div>
-
-        <div id="event-list-container">
-            <h2>Các Sự Kiện Sắp Tới</h2>
-            <ul id="event-list">
-                </ul>
-        </div>
-    </main>
-
-    <script type="module" src="script.js"></script>
+  <h1>Dòng thời gian sự kiện</h1>
+  <form id="eventForm">
+    <input type="text" id="name" placeholder="Tên sự kiện" required>
+    <!-- Luôn là kiểu 24 giờ -->
+    <input type="datetime-local" id="startTime" required>
+    <input type="datetime-local" id="endTime" required>
+    <select id="color">
+      <option value="red">Đỏ</option>
+      <option value="yellow">Vàng</option>
+      <option value="gray">Xám</option>
+      <option value="pink">Hồng</option>
+      <option value="blue">Xanh dương</option>
+      <option value="indigo">Xanh tím</option>
+    </select>
+    <button type="submit">Thêm sự kiện</button>
+    <!-- editId và cancel button được tạo động bởi script -->
+  </form>
+  <div id="timeline-container">
+    <div id="timeline"></div>
+  </div>
+  <script src="script.js"></script>
 </body>
 </html>
