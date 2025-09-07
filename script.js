@@ -265,6 +265,11 @@ const widthPercent = Math.max(rightPercent - leftPercent, (4 / (khungTimeline.cl
       <button class="edit-btn" title="Sửa" onclick="(function(ev){ return function(e){ e.stopPropagation(); startEditEvent(ev); }})(JSON.parse('${JSON.stringify({ id: ev.id, name: ev.name, color: ev.color, startTime: ev.startTime || ev.start, endTime: ev.endTime || ev.end })}'))(event)">Sửa</button>
       <button class="delete-btn" onclick="(function(id){ return function(e){ e.stopPropagation(); if(confirm('Xóa sự kiện?')) deleteEvent(id); }} )('${ev.id}')(event)">Xóa</button>`;
 
+    // Thêm sự kiện click để mở modal
+    thanh.addEventListener('click', function() {
+      showEventModal(ev, thoiGianBatDau, thoiGianKetThuc);
+    });
+
     // Tooltip
     const nutGiup = document.createElement('div');
     nutGiup.className = "event-tooltip";
@@ -379,7 +384,55 @@ document.getElementById('eventForm').onsubmit = function(e) {
 function deleteEvent(id) {
   db.collection("events").doc(id).delete();
 }
-// Xóa event
-function deleteEvent(id) {
-  db.collection("events").doc(id).delete();
+
+// Modal functions
+function showEventModal(ev, thoiGianBatDau, thoiGianKetThuc) {
+  const modal = document.getElementById('eventModal');
+  const backdrop = document.getElementById('modalBackdrop');
+  const title = document.getElementById('modalTitle');
+  const details = document.getElementById('modalDetails');
+  const timeRemaining = document.getElementById('modalTimeRemaining');
+
+  // Set content
+  title.textContent = ev.name;
+  details.innerHTML = `
+    <p><strong>Thời gian bắt đầu:</strong> ${thoiGianBatDau.toLocaleString('vi-VN')}</p>
+    <p><strong>Thời gian kết thúc:</strong> ${thoiGianKetThuc.toLocaleString('vi-VN')}</p>
+    <p><strong>Thời lượng:</strong> ${ev.duration} ngày</p>
+    <p><strong>Màu sắc:</strong> <span style="display:inline-block;width:20px;height:20px;background:${ev.color};vertical-align:middle;border-radius:4px;margin-left:8px;"></span></p>
+  `;
+
+  // Update time remaining
+  function updateTimeRemaining() {
+    timeRemaining.textContent = tinhThoiGianConLai(thoiGianKetThuc);
+  }
+  updateTimeRemaining();
+  const timer = setInterval(updateTimeRemaining, 1000);
+
+  // Show modal
+  modal.style.display = 'block';
+  backdrop.style.display = 'block';
+
+  // Close when clicking backdrop
+  backdrop.onclick = function() {
+    closeEventModal();
+    clearInterval(timer);
+  };
+
+  // Store timer ID to clear when closing
+  modal._timer = timer;
+}
+
+function closeEventModal() {
+  const modal = document.getElementById('eventModal');
+  const backdrop = document.getElementById('modalBackdrop');
+  
+  // Clear update timer if exists
+  if (modal._timer) {
+    clearInterval(modal._timer);
+    modal._timer = null;
+  }
+
+  modal.style.display = 'none';
+  backdrop.style.display = 'none';
 }
