@@ -143,12 +143,9 @@ function renderTimeline(events) {
     const start = ev.startTime ? new Date(ev.startTime) : new Date(ev.start);
     const end = ev.endTime ? new Date(ev.endTime) : new Date(ev.end || ev.start);
 
-    // Clamp vào trong phạm vi timeline để không vượt ngoài ngày diễn ra sự kiện
-    // NOTE: tính chiều dài dựa trên "ngày" — bắt đầu từ 00:00 của ngày bắt đầu,
-    // và kết thúc tại 00:00 của ngày kết thúc (không cộng thêm cả ngày).
-    const rawLeft = calcLeftPx(startOfDay(start), startDate);
-    const rawRight = calcLeftPx(startOfDay(end), startDate);
-
+        // Tính vị trí chính xác dựa trên thời gian thực của sự kiện
+    const rawLeft = calcLeftPx(start, startDate);
+    const rawRight = calcLeftPx(end, startDate);
     const minLeft = 0;
     const maxRight = daysCount * pxPerDay;
     const left = Math.max(minLeft, Math.min(rawLeft, maxRight));
