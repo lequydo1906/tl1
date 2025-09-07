@@ -147,13 +147,14 @@ function renderTimeline(events) {
 
 
   // Tính vị trí pixel bắt đầu và kết thúc (không lặp biến, không log thừa)
+
   const chiSoNgayBatDau = layIndexTuNgay(thoiGianBatDau, ngayBatDau);
   const tyLeGioBatDau = (thoiGianBatDau.getHours() + thoiGianBatDau.getMinutes()/60 + thoiGianBatDau.getSeconds()/3600) / 24;
-  const viTriBatDau = (Math.floor(chiSoNgayBatDau) * pixelMoiNgay) + (pixelMoiNgay * tyLeGioBatDau);
+  const viTriBatDau = (chiSoNgayBatDau + tyLeGioBatDau) * pixelMoiNgay;
 
   const chiSoNgayKetThuc = layIndexTuNgay(thoiGianKetThuc, ngayBatDau);
   const tyLeGioKetThuc = (thoiGianKetThuc.getHours() + thoiGianKetThuc.getMinutes()/60 + thoiGianKetThuc.getSeconds()/3600) / 24;
-  const viTriKetThuc = (Math.floor(chiSoNgayKetThuc) * pixelMoiNgay) + (pixelMoiNgay * tyLeGioKetThuc);
+  const viTriKetThuc = (chiSoNgayKetThuc + tyLeGioKetThuc) * pixelMoiNgay;
 
   const viTriTrai = Math.max(0, Math.min(viTriBatDau, soNgay * pixelMoiNgay));
   const viTriPhai = Math.max(0, Math.min(viTriKetThuc, soNgay * pixelMoiNgay));
@@ -189,7 +190,7 @@ function renderTimeline(events) {
   const thanh = document.createElement('div');
   thanh.className = `event-bar ${ev.color || ""}`;
   thanh.style.left = viTriTrai + "px";
-  thanh.style.top = (60 + idx * 44) + "px";
+  thanh.style.top = (60 + idx * 44 ) + "px";
   thanh.style.width = chieuRong + "px";
   thanh.style.height = "36px";
 
