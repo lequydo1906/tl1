@@ -22,8 +22,8 @@ function layNgayHienTai() {
 }
 function layNgayBatDauKetThuc() {
   const homNay = layNgayHienTai();
-  const ngayBatDau = new Date(homNay.getFullYear(), homNay.getMonth(), homNay.getDate() - 7, 0, 0, 0, 0);
-  const ngayKetThuc = new Date(homNay.getFullYear(), homNay.getMonth(), homNay.getDate() + 6, 0, 0, 0, 0);
+  const ngayBatDau = new Date(homNay.getFullYear(), homNay.getMonth(), homNay.getDate() - 4, 0, 0, 0, 0);
+  const ngayKetThuc = new Date(homNay.getFullYear(), homNay.getMonth(), homNay.getDate() + 9, 0, 0, 0, 0);
   return { ngayBatDau, ngayKetThuc };
 }
 function demSoNgay(ngayBatDau, ngayKetThuc) {
