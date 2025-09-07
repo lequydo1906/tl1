@@ -146,19 +146,20 @@ function renderTimeline(events) {
     const thoiGianKetThuc = ev.endTime ? new Date(ev.endTime) : new Date(ev.end || ev.start);
 
 
-  // Tính vị trí pixel bắt đầu và kết thúc (không lặp biến, không log thừa)
+  // Tính vị trí phần trăm timeline
+const chiSoNgayBatDau = layIndexTuNgay(thoiGianBatDau, ngayBatDau);
+const tyLeGioBatDau = (thoiGianBatDau.getHours() + thoiGianBatDau.getMinutes()/60 + thoiGianBatDau.getSeconds()/3600) / 24;
+const percentBatDau = ((chiSoNgayBatDau + tyLeGioBatDau) / soNgay) * 100;
 
-  const chiSoNgayBatDau = layIndexTuNgay(thoiGianBatDau, ngayBatDau);
-  const tyLeGioBatDau = (thoiGianBatDau.getHours() + thoiGianBatDau.getMinutes()/60 + thoiGianBatDau.getSeconds()/3600) / 24;
-  const viTriBatDau = (chiSoNgayBatDau + tyLeGioBatDau) * pixelMoiNgay;
+const chiSoNgayKetThuc = layIndexTuNgay(thoiGianKetThuc, ngayBatDau);
+const tyLeGioKetThuc = (thoiGianKetThuc.getHours() + thoiGianKetThuc.getMinutes()/60 + thoiGianKetThuc.getSeconds()/3600) / 24;
+const percentKetThuc = ((chiSoNgayKetThuc + tyLeGioKetThuc) / soNgay) * 100;
 
-  const chiSoNgayKetThuc = layIndexTuNgay(thoiGianKetThuc, ngayBatDau);
-  const tyLeGioKetThuc = (thoiGianKetThuc.getHours() + thoiGianKetThuc.getMinutes()/60 + thoiGianKetThuc.getSeconds()/3600) / 24;
-  const viTriKetThuc = (chiSoNgayKetThuc + tyLeGioKetThuc) * pixelMoiNgay;
+const leftPercent = Math.max(0, Math.min(percentBatDau, 100));
+const rightPercent = Math.max(0, Math.min(percentKetThuc, 100));
+const widthPercent = Math.max(rightPercent - leftPercent, (4 / (khungTimeline.clientWidth || window.innerWidth)) * 100);
 
-  const viTriTrai = Math.max(0, Math.min(viTriBatDau, soNgay * pixelMoiNgay));
-  const viTriPhai = Math.max(0, Math.min(viTriKetThuc, soNgay * pixelMoiNgay));
-  const chieuRong = Math.max(viTriPhai - viTriTrai, 4);
+
 
     // Tính vị trí 0h của ngày bắt đầu và ngày kết thúc
     const viTri0hBatDau = Math.floor(chiSoNgayBatDau) * pixelMoiNgay;
@@ -188,11 +189,11 @@ function renderTimeline(events) {
 
 
   const thanh = document.createElement('div');
-  thanh.className = `event-bar ${ev.color || ""}`;
-  thanh.style.left = viTriTrai + "px";
-  thanh.style.top = (60 + idx * 44 ) + "px";
-  thanh.style.width = chieuRong + "px";
-  thanh.style.height = "36px";
+thanh.className = `event-bar ${ev.color || ""}`;
+thanh.style.left = leftPercent + "%";
+thanh.style.top = (60 + idx * 44) + "px";
+thanh.style.width = widthPercent + "%";
+thanh.style.height = "36px";
 
     // Nội dung: tên + thời gian (ẩn mặc định) + nút sửa/xóa (ẩn mặc định, hiện khi hover)
     thanh.innerHTML = `<div class="event-title">${ev.name}</div>
