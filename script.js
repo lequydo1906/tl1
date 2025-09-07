@@ -125,10 +125,34 @@ function tinhThoiGianConLai(thoiDiemKetThuc) {
   const bayGio = new Date();
   const ketThuc = new Date(thoiDiemKetThuc);
   let khoangCach = ketThuc - bayGio;
-  if (khoangCach <= 0) return "Đã kết thúc";
-  let gio = Math.floor(khoangCach / (1000 * 60 * 60));
-  let phut = Math.floor((khoangCach % (1000 * 60 * 60)) / (1000 * 60));
-  let giay = Math.floor((khoangCach % (1000 * 60)) / 1000);
+  
+  if (khoangCach <= 0) {
+    // Tính thời gian đã kết thúc
+    khoangCach = Math.abs(khoangCach);
+    const ngay = Math.floor(khoangCach / (1000 * 60 * 60 * 24));
+    const gio = Math.floor((khoangCach % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const phut = Math.floor((khoangCach % (1000 * 60 * 60)) / (1000 * 60));
+    
+    if (ngay > 0) {
+      return `Đã kết thúc ${ngay} ngày trước`;
+    } else if (gio > 0) {
+      return `Đã kết thúc ${gio} giờ trước`;
+    } else if (phut > 0) {
+      return `Đã kết thúc ${phut} phút trước`;
+    } else {
+      return "Vừa kết thúc";
+    }
+  }
+  
+  // Tính thời gian còn lại
+  const ngay = Math.floor(khoangCach / (1000 * 60 * 60 * 24));
+  const gio = Math.floor((khoangCach % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  const phut = Math.floor((khoangCach % (1000 * 60 * 60)) / (1000 * 60));
+  const giay = Math.floor((khoangCach % (1000 * 60)) / 1000);
+  
+  if (ngay > 0) {
+    return `Còn lại ${ngay} ngày ${gio}h`;
+  }
   return `Còn lại ${gio}h ${phut}m ${giay}s`;
 }
 function dinhDangGio24h(ngay) {
@@ -306,12 +330,42 @@ db.collection("events").onSnapshot(snap => {
     }
     events.push(data);
   });
-  // Sắp xếp theo thời gian còn lại (nhỏ -> lớn)
-  events.sort((a,b) => {
-    const na = new Date(a.endTime || a.end || a.start) - new Date();
-    const nb = new Date(b.endTime || b.end || b.start) - new Date();
-    return na - nb;
+  // Hàm phân loại trạng thái sự kiện
+  function getEventStatus(event) {
+    const now = new Date();
+    const endTime = new Date(event.endTime || event.end || event.start);
+    const timeLeft = endTime - now;
+    
+    if (timeLeft < 0) {
+      // Đã kết thúc
+      return {status: 'ended', timeAgo: Math.abs(timeLeft)};
+    } else {
+      // Chưa kết thúc
+      return {status: 'active', timeLeft: timeLeft};
+    }
+  }
+
+  // Sắp xếp sự kiện theo quy tắc mới
+  events.sort((a, b) => {
+    const statusA = getEventStatus(a);
+    const statusB = getEventStatus(b);
+    
+    // Nếu cả hai đều đang hoạt động
+    if (statusA.status === 'active' && statusB.status === 'active') {
+      // Sắp xếp theo thời gian còn lại (ít -> nhiều)
+      return statusA.timeLeft - statusB.timeLeft;
+    }
+    
+    // Nếu cả hai đều đã kết thúc
+    if (statusA.status === 'ended' && statusB.status === 'ended') {
+      // Sắp xếp theo thời gian đã kết thúc (mới kết thúc -> kết thúc lâu)
+      return statusA.timeAgo - statusB.timeAgo;
+    }
+    
+    // Sự kiện đang hoạt động luôn ở trên sự kiện đã kết thúc
+    return statusA.status === 'active' ? -1 : 1;
   });
+
   window._lastEvents = events; // Lưu events để dùng khi resize
   renderTimeline(events);
 });
