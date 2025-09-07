@@ -145,28 +145,20 @@ function renderTimeline(events) {
     const thoiGianBatDau = ev.startTime ? new Date(ev.startTime) : new Date(ev.start);
     const thoiGianKetThuc = ev.endTime ? new Date(ev.endTime) : new Date(ev.end || ev.start);
 
-    // Lấy vị trí dựa trên index ngày và thời gian trong ngày
-    const chiSoNgayBatDau = layIndexTuNgay(thoiGianBatDau, ngayBatDau);
-    const chiSoNgayKetThuc = layIndexTuNgay(thoiGianKetThuc, ngayBatDau);
-
-    // Tính pixel cho phần thời gian trong ngày
-    const pixelGioBatDau = (thoiGianBatDau.getHours() * 3600 + 
-                           thoiGianBatDau.getMinutes() * 60 + 
-                           thoiGianBatDau.getSeconds()) * (pixelMoiNgay / (24 * 3600));
-                           
-    const pixelGioKetThuc = (thoiGianKetThuc.getHours() * 3600 + 
-                            thoiGianKetThuc.getMinutes() * 60 + 
-                            thoiGianKetThuc.getSeconds()) * (pixelMoiNgay / (24 * 3600));
-
-    // Tổng hợp vị trí pixel
-    const viTriBatDau = chiSoNgayBatDau * pixelMoiNgay + pixelGioBatDau;
-    const viTriKetThuc = chiSoNgayKetThuc * pixelMoiNgay + pixelGioKetThuc;
+    // Tính thời gian chính xác từ dữ liệu sự kiện
+    const thoiGianBatDauMs = thoiGianBatDau.getTime();
+    const thoiGianKetThucMs = thoiGianKetThuc.getTime();
+    const ngayBatDauMs = ngayBatDau.getTime();
+    
+    // Tính toán vị trí pixel dựa trên thời gian thực
+    const viTriBatDau = ((thoiGianBatDauMs - ngayBatDauMs) / (24 * 60 * 60 * 1000)) * pixelMoiNgay;
+    const viTriKetThuc = ((thoiGianKetThucMs - ngayBatDauMs) / (24 * 60 * 60 * 1000)) * pixelMoiNgay;
     
     // Đảm bảo vị trí nằm trong phạm vi timeline
     const viTriTrai = Math.max(0, Math.min(viTriBatDau, soNgay * pixelMoiNgay));
     const viTriPhai = Math.max(0, Math.min(viTriKetThuc, soNgay * pixelMoiNgay));
     
-    // Chiều rộng tối thiểu 4px
+    // Chiều rộng phải chính xác theo thời gian thực, tối thiểu 4px
     const chieuRong = Math.max(viTriPhai - viTriTrai, 4);
 
 
