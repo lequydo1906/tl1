@@ -393,13 +393,71 @@ cancelBtn.onclick = () => {
 // Thêm helper để set form từ event khi edit
 function startEditEvent(ev) {
   document.getElementById('name').value = ev.name || '';
-  document.getElementById('color').value = ev.color || 'red';
-  if (ev.startTime || ev.start) document.getElementById('startTime').value = toInputDatetimeLocal(ev.startTime || ev.start);
-  if (ev.endTime || ev.end) document.getElementById('endTime').value = toInputDatetimeLocal(ev.endTime || ev.end);
+  
+  // Xử lý màu sắc
+  const colorMap = {
+    red: '#d32f2f',
+    yellow: '#fbc02d',
+    gray: '#757575',
+    pink: '#e91e63',
+    blue: '#1976d2',
+    indigo: '#5c6bc0'
+  };
+  const eventColor = colorMap[ev.color] || ev.color || '#d32f2f';
+  document.getElementById('color').value = eventColor;
+  document.getElementById('colorCode').value = eventColor;
+  
+  // Đảm bảo giữ nguyên giá trị thời gian
+  const startTime = ev.startTime || ev.start;
+  const endTime = ev.endTime || ev.end;
+  
+  if (startTime) {
+    const startInput = document.getElementById('startTime');
+    startInput.value = toInputDatetimeLocal(startTime);
+    // Lưu giá trị gốc để kiểm tra thay đổi
+    startInput.setAttribute('data-original', startInput.value);
+  }
+  
+  if (endTime) {
+    const endInput = document.getElementById('endTime');
+    endInput.value = toInputDatetimeLocal(endTime);
+    // Lưu giá trị gốc để kiểm tra thay đổi
+    endInput.setAttribute('data-original', endInput.value);
+  }
+  
   editIdInput.value = ev.id;
   document.querySelector('#eventForm button[type="submit"]').textContent = 'Lưu thay đổi';
   cancelBtn.style.display = 'inline-block';
+  
+  // Thêm kiểm tra khi input thay đổi
+  ['startTime', 'endTime'].forEach(id => {
+    const input = document.getElementById(id);
+    input.addEventListener('change', function() {
+      if (!this.value) {
+        this.value = this.getAttribute('data-original');
+      }
+    });
+  });
 }
+
+// Xử lý color picker trong form thêm sự kiện
+const addEventColorPicker = document.getElementById('color');
+const addEventColorCode = document.getElementById('colorCode');
+
+addEventColorPicker.addEventListener('input', function(e) {
+  addEventColorCode.value = e.target.value.toUpperCase();
+});
+
+addEventColorCode.addEventListener('input', function(e) {
+  let value = e.target.value;
+  if (!value.startsWith('#')) {
+    value = '#' + value;
+    e.target.value = value;
+  }
+  if (/^#[0-9A-F]{6}$/i.test(value)) {
+    addEventColorPicker.value = value;
+  }
+});
 
 // Thêm event
 document.getElementById('eventForm').onsubmit = function(e) {
@@ -412,7 +470,7 @@ document.getElementById('eventForm').onsubmit = function(e) {
 
   const data = {
     name: document.getElementById('name').value,
-    color: document.getElementById('color').value,
+    color: document.getElementById('colorCode').value,
     startTime: start.toISOString(),
     endTime: end.toISOString(),
     duration
@@ -425,10 +483,16 @@ document.getElementById('eventForm').onsubmit = function(e) {
       document.getElementById('editId').value = '';
       document.querySelector('#eventForm button[type="submit"]').textContent = 'Thêm sự kiện';
       cancelBtn.style.display = 'none';
+      // Reset color picker to default
+      addEventColorPicker.value = '#d32f2f';
+      addEventColorCode.value = '#d32f2f';
     });
   } else {
     db.collection("events").add(data).then(() => {
       document.getElementById('eventForm').reset();
+      // Reset color picker to default
+      addEventColorPicker.value = '#d32f2f';
+      addEventColorCode.value = '#d32f2f';
     });
   }
 };
@@ -512,13 +576,20 @@ function showEventModal(ev, thoiGianBatDau, thoiGianKetThuc) {
   // Handle edit button
   editBtn.onclick = function() {
     if (form.classList.contains('active')) {
-      // Save changes
+      const modalStartTime = document.getElementById('modalStartTime').value;
+      const modalEndTime = document.getElementById('modalEndTime').value;
+      
+      if (!modalStartTime || !modalEndTime) {
+        alert('Vui lòng chọn thời gian bắt đầu và kết thúc');
+        return;
+      }
+
       const formData = {
         name: document.getElementById('modalName').value,
-        startTime: new Date(document.getElementById('modalStartTime').value).toISOString(),
-        endTime: new Date(document.getElementById('modalEndTime').value).toISOString(),
+        startTime: new Date(modalStartTime).toISOString(),
+        endTime: new Date(modalEndTime).toISOString(),
         color: document.getElementById('modalColorCode').value,
-        duration: Math.max(1, Math.round((new Date(document.getElementById('modalEndTime').value) - new Date(document.getElementById('modalStartTime').value)) / (1000 * 60 * 60 * 24)))
+        duration: Math.max(1, Math.round((new Date(modalEndTime) - new Date(modalStartTime)) / (1000 * 60 * 60 * 24)))
       };
 
       db.collection("events").doc(ev.id).update(formData).then(() => {
