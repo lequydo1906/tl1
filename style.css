@@ -3,13 +3,34 @@ h1 { font-size: 2em; margin: 20px; }
 form { margin: 20px; display: flex; gap: 8px; flex-wrap: wrap; }
 
 #timeline-container {
-  margin: 30px 20px;
+  margin: 30px auto;
   background: #222;
   border-radius: 10px;
   padding: 20px 0 24px 0;
   overflow-x: auto;
-  width: 100vw;
-  max-width: 100vw;
+  width: 800px; /* Kích thước mặc định */
+  height: 600px;
+  min-width: 400px; /* Giới hạn kích thước nhỏ nhất */
+  min-height: 300px;
+  max-width: 90vw; /* Giới hạn kích thước responsive */
+  max-height: 90vh;
+  position: relative;
+  resize: both; /* Cho phép resize */
+  overflow: auto;
+  transition: all 0.1s ease; /* Smooth resize */
+}
+
+/* Handle resize */
+#timeline-container::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 15px;
+  height: 15px;
+  cursor: nw-resize;
+  background: linear-gradient(135deg, transparent 50%, #FFD600 50%);
+  border-radius: 0 0 10px 0;
 }
 
 #timeline {
