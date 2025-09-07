@@ -145,30 +145,33 @@ function renderTimeline(events) {
     const thoiGianBatDau = ev.startTime ? new Date(ev.startTime) : new Date(ev.start);
     const thoiGianKetThuc = ev.endTime ? new Date(ev.endTime) : new Date(ev.end || ev.start);
 
-    // 1. Lấy chỉ số ngày của điểm kết thúc
-    const chiSoNgayKetThuc = Math.floor(layIndexTuNgay(thoiGianKetThuc, ngayBatDau));
+    // 1. Tính chỉ số ngày và vị trí đường kẻ dọc cho cả điểm bắt đầu và kết thúc
+    const chiSoNgayKetThuc = layIndexTuNgay(thoiGianKetThuc, ngayBatDau);
+    const chiSoNgayBatDau = layIndexTuNgay(thoiGianBatDau, ngayBatDau);
     
-    // 2. Vị trí đường kẻ dọc tại 0h của ngày kết thúc
-    const viTriKeDoc = chiSoNgayKetThuc * pixelMoiNgay;
-
-    // 3. Tính phần giờ trong ngày kết thúc (0-1)
-    const gioKetThuc = thoiGianKetThuc.getHours();
-    const phutKetThuc = thoiGianKetThuc.getMinutes();
-    const giayKetThuc = thoiGianKetThuc.getSeconds();
+    // 2. Lấy vị trí đường kẻ dọc của ngày hiện tại và ngày tiếp theo của điểm kết thúc
+    const viTriKeDauNgay = Math.floor(chiSoNgayKetThuc) * pixelMoiNgay;
+    const viTriKeCuoiNgay = (Math.floor(chiSoNgayKetThuc) + 1) * pixelMoiNgay;
     
-    // 4. Tính vị trí kết thúc dựa trên đường kẻ dọc
-    const viTriKetThuc = viTriKeDoc + (
-      (gioKetThuc + phutKetThuc/60 + giayKetThuc/3600) * (pixelMoiNgay/24)
-    );
-
-    // 5. Tính vị trí bắt đầu tương tự
-    const chiSoNgayBatDau = Math.floor(layIndexTuNgay(thoiGianBatDau, ngayBatDau));
-    const viTriKeDauNgay = chiSoNgayBatDau * pixelMoiNgay;
-    const viTriBatDau = viTriKeDauNgay + (
-      (thoiGianBatDau.getHours() + 
-       thoiGianBatDau.getMinutes()/60 + 
-       thoiGianBatDau.getSeconds()/3600) * (pixelMoiNgay/24)
-    );
+    // 3. Tính tỷ lệ thời gian trong ngày (từ 0h đến 24h)
+    const tyLeGioKetThuc = (
+      thoiGianKetThuc.getHours() + 
+      thoiGianKetThuc.getMinutes()/60 + 
+      thoiGianKetThuc.getSeconds()/3600
+    ) / 24;
+    
+    // 4. Nội suy tuyến tính giữa hai đường kẻ dọc
+    const viTriKetThuc = viTriKeDauNgay + (viTriKeCuoiNgay - viTriKeDauNgay) * tyLeGioKetThuc;
+    
+    // 5. Tương tự cho điểm bắt đầu
+    const viTriKeDauNgayBatDau = Math.floor(chiSoNgayBatDau) * pixelMoiNgay;
+    const viTriKeCuoiNgayBatDau = (Math.floor(chiSoNgayBatDau) + 1) * pixelMoiNgay;
+    const tyLeGioBatDau = (
+      thoiGianBatDau.getHours() + 
+      thoiGianBatDau.getMinutes()/60 + 
+      thoiGianBatDau.getSeconds()/3600
+    ) / 24;
+    const viTriBatDau = viTriKeDauNgayBatDau + (viTriKeCuoiNgayBatDau - viTriKeDauNgayBatDau) * tyLeGioBatDau;
     
     // Đảm bảo vị trí nằm trong phạm vi timeline
     const viTriTrai = Math.max(0, Math.min(viTriBatDau, soNgay * pixelMoiNgay));
