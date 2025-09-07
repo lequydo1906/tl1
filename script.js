@@ -141,19 +141,33 @@ function renderTimeline(events) {
   timeline.querySelectorAll(".event-bar").forEach(e => e.remove());
   document.querySelectorAll('.event-tooltip').forEach(el => el.remove());
   events.forEach((ev, idx) => {
-    const start = ev.startTime ? new Date(ev.startTime) : new Date(ev.start);
-    const end = ev.endTime ? new Date(ev.endTime) : new Date(ev.end || ev.start);
+    // Chuyển đổi thời gian bắt đầu và kết thúc thành Date
+    const thoiGianBatDau = ev.startTime ? new Date(ev.startTime) : new Date(ev.start);
+    const thoiGianKetThuc = ev.endTime ? new Date(ev.endTime) : new Date(ev.end || ev.start);
 
-    // Tính vị trí bắt đầu và kết thúc sử dụng cùng một hàm tinhViTriPixel
-    const viTriBatDau = tinhViTriPixel(start, ngayBatDau);
-    const viTriKetThuc = tinhViTriPixel(end, ngayBatDau);
+    // Lấy vị trí dựa trên index ngày và thời gian trong ngày
+    const chiSoNgayBatDau = layIndexTuNgay(thoiGianBatDau, ngayBatDau);
+    const chiSoNgayKetThuc = layIndexTuNgay(thoiGianKetThuc, ngayBatDau);
+
+    // Tính pixel cho phần thời gian trong ngày
+    const pixelGioBatDau = (thoiGianBatDau.getHours() * 3600 + 
+                           thoiGianBatDau.getMinutes() * 60 + 
+                           thoiGianBatDau.getSeconds()) * (pixelMoiNgay / (24 * 3600));
+                           
+    const pixelGioKetThuc = (thoiGianKetThuc.getHours() * 3600 + 
+                            thoiGianKetThuc.getMinutes() * 60 + 
+                            thoiGianKetThuc.getSeconds()) * (pixelMoiNgay / (24 * 3600));
+
+    // Tổng hợp vị trí pixel
+    const viTriBatDau = chiSoNgayBatDau * pixelMoiNgay + pixelGioBatDau;
+    const viTriKetThuc = chiSoNgayKetThuc * pixelMoiNgay + pixelGioKetThuc;
     
     // Đảm bảo vị trí nằm trong phạm vi timeline
-    const left = Math.max(0, Math.min(viTriBatDau, soNgay * pixelMoiNgay));
-    const right = Math.max(0, Math.min(viTriKetThuc, soNgay * pixelMoiNgay));
+    const viTriTrai = Math.max(0, Math.min(viTriBatDau, soNgay * pixelMoiNgay));
+    const viTriPhai = Math.max(0, Math.min(viTriKetThuc, soNgay * pixelMoiNgay));
     
-    // Chiều rộng là khoảng cách giữa hai vị trí
-    const width = Math.max(right - left, 4);
+    // Chiều rộng tối thiểu 4px
+    const chieuRong = Math.max(viTriPhai - viTriTrai, 4);
 
 
     const bar = document.createElement('div');
