@@ -1,4 +1,5 @@
 
+
 // Cấu hình Firebase của bạn
 // Thay thế bằng cấu hình của dự án Firebase của bạn
 const firebaseConfig = {
@@ -143,16 +144,13 @@ function renderTimeline(events) {
     const start = ev.startTime ? new Date(ev.startTime) : new Date(ev.start);
     const end = ev.endTime ? new Date(ev.endTime) : new Date(ev.end || ev.start);
 
-        // Tính vị trí bắt đầu và kết thúc theo thời gian thực
-    const leftPosition = calcLeftPx(start, startDate);
+        // Tính vị trí bắt đầu 
+    const left = Math.max(0, Math.min(calcLeftPx(start, startDate), daysCount * pxPerDay));
+    
+    // Tính chiều rộng dựa trên vị trí kết thúc
     const rightPosition = calcLeftPx(end, startDate);
     
-    // Đảm bảo vị trí nằm trong phạm vi timeline
-    const left = Math.max(0, Math.min(leftPosition, daysCount * pxPerDay));
-    const right = Math.max(0, Math.min(rightPosition, daysCount * pxPerDay));
-    
-    // Chiều rộng là khoảng cách giữa điểm bắt đầu và kết thúc
-    const width = Math.max(right - left, 4);
+    const width = Math.max(Math.min(rightPosition - left, daysCount * pxPerDay - left), 4)
 
 
     const bar = document.createElement('div');
