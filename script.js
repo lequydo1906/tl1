@@ -141,19 +141,19 @@ function renderTimeline(events) {
   timeline.querySelectorAll(".event-bar").forEach(e => e.remove());
   document.querySelectorAll('.event-tooltip').forEach(el => el.remove());
   events.forEach((ev, idx) => {
+
     // Chuyển đổi thời gian bắt đầu và kết thúc thành Date
     const thoiGianBatDau = ev.startTime ? new Date(ev.startTime) : new Date(ev.start);
     const thoiGianKetThuc = ev.endTime ? new Date(ev.endTime) : new Date(ev.end || ev.start);
 
+    // Tính vị trí phần trăm timeline
+    const chiSoNgayBatDau = layIndexTuNgay(thoiGianBatDau, ngayBatDau);
+    const tyLeGioBatDau = (thoiGianBatDau.getHours() + thoiGianBatDau.getMinutes()/60 + thoiGianBatDau.getSeconds()/3600) / 24;
+    const percentBatDau = ((chiSoNgayBatDau + tyLeGioBatDau) / soNgay) * 100;
 
-  // Tính vị trí phần trăm timeline
-const chiSoNgayBatDau = layIndexTuNgay(thoiGianBatDau, ngayBatDau);
-const tyLeGioBatDau = (thoiGianBatDau.getHours() + thoiGianBatDau.getMinutes()/60 + thoiGianBatDau.getSeconds()/3600) / 24;
-const percentBatDau = ((chiSoNgayBatDau + tyLeGioBatDau) / soNgay) * 100;
-
-const chiSoNgayKetThuc = layIndexTuNgay(thoiGianKetThuc, ngayBatDau);
-const tyLeGioKetThuc = (thoiGianKetThuc.getHours() + thoiGianKetThuc.getMinutes()/60 + thoiGianKetThuc.getSeconds()/3600) / 24;
-const percentKetThuc = ((chiSoNgayKetThuc + tyLeGioKetThuc) / soNgay) * 100;
+    const chiSoNgayKetThuc = layIndexTuNgay(thoiGianKetThuc, ngayBatDau);
+    const tyLeGioKetThuc = (thoiGianKetThuc.getHours() + thoiGianKetThuc.getMinutes()/60 + thoiGianKetThuc.getSeconds()/3600) / 24;
+    const percentKetThuc = ((chiSoNgayKetThuc + tyLeGioKetThuc) / soNgay) * 100;
 
 const leftPercent = Math.max(0, Math.min(percentBatDau, 100));
 const rightPercent = Math.max(0, Math.min(percentKetThuc, 100));
@@ -175,25 +175,24 @@ const widthPercent = Math.max(rightPercent - leftPercent, (4 / (khungTimeline.cl
       end: thoiGianKetThuc.toLocaleString(),
       chiSoNgayBatDau,
       tyLeGioBatDau,
-      viTriBatDau,
-      viTri0hBatDau,
+      percentBatDau,
       chiSoNgayKetThuc,
       tyLeGioKetThuc,
-      viTriKetThuc,
+      percentKetThuc,
+      leftPercent,
+      rightPercent,
+      widthPercent,
+      viTri0hBatDau,
       viTri0hKetThuc,
-      viTriTrai,
-      viTriPhai,
-      chieuRong,
       viTriHienTai
     });
 
-
-  const thanh = document.createElement('div');
-thanh.className = `event-bar ${ev.color || ""}`;
-thanh.style.left = leftPercent + "%";
-thanh.style.top = (60 + idx * 44) + "px";
-thanh.style.width = widthPercent + "%";
-thanh.style.height = "36px";
+    const thanh = document.createElement('div');
+    thanh.className = `event-bar ${ev.color || ""}`;
+    thanh.style.left = leftPercent + "%";
+    thanh.style.top = (60 + idx * 44) + "px";
+    thanh.style.width = widthPercent + "%";
+    thanh.style.height = "36px";
 
     // Nội dung: tên + thời gian (ẩn mặc định) + nút sửa/xóa (ẩn mặc định, hiện khi hover)
     thanh.innerHTML = `<div class="event-title">${ev.name}</div>
