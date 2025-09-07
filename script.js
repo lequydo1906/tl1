@@ -14,70 +14,70 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-const pxPerDay = Math.floor(window.innerWidth / 14);
+const pixelMoiNgay = Math.floor(window.innerWidth / 14);
 
-function getToday() {
-  const now = new Date();
-  return new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+function layNgayHienTai() {
+  const bayGio = new Date();
+  return new Date(bayGio.getFullYear(), bayGio.getMonth(), bayGio.getDate(), 0, 0, 0, 0);
 }
-function getStartEndDate() {
-  const today = getToday();
-  const startDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 7, 0, 0, 0, 0);
-  const endDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 6, 0, 0, 0, 0);
-  return { startDate, endDate };
+function layNgayBatDauKetThuc() {
+  const homNay = layNgayHienTai();
+  const ngayBatDau = new Date(homNay.getFullYear(), homNay.getMonth(), homNay.getDate() - 7, 0, 0, 0, 0);
+  const ngayKetThuc = new Date(homNay.getFullYear(), homNay.getMonth(), homNay.getDate() + 6, 0, 0, 0, 0);
+  return { ngayBatDau, ngayKetThuc };
 }
-function getDaysCount(startDate, endDate) {
-  return Math.round((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
+function demSoNgay(ngayBatDau, ngayKetThuc) {
+  return Math.round((ngayKetThuc - ngayBatDau) / (1000 * 60 * 60 * 24)) + 1;
 }
 
 const timeline = document.getElementById('timeline');
-const timelineContainer = document.getElementById('timeline-container');
+const khungTimeline = document.getElementById('timeline-container');
 
-function getDateByIndex(idx, startDate) {
-  return new Date(startDate.getTime() + idx * 24 * 60 * 60 * 1000);
+function layNgayTheoIndex(idx, ngayBatDau) {
+  return new Date(ngayBatDau.getTime() + idx * 24 * 60 * 60 * 1000);
 }
-function getDateIndexFromDate(date, startDate) {
-  if (!(date instanceof Date)) date = new Date(date);
-  return Math.floor((date - startDate) / (1000 * 60 * 60 * 24));
+function layIndexTuNgay(ngay, ngayBatDau) {
+  if (!(ngay instanceof Date)) ngay = new Date(ngay);
+  return Math.floor((ngay - ngayBatDau) / (1000 * 60 * 60 * 24));
 }
-function calcLeftPx(date, startDate) {
-  if (!(date instanceof Date)) date = new Date(date);
-  const dayIdx = getDateIndexFromDate(date, startDate);
-  const hour = date.getHours();
-  const minute = date.getMinutes();
-  const second = date.getSeconds();
-  let px = dayIdx * pxPerDay;
-  px += hour * pxPerDay / 24;
-  px += minute * pxPerDay / 24 / 60;
-  px += second * pxPerDay / 24 / 3600;
-  return px;
+function tinhViTriPixel(ngay, ngayBatDau) {
+  if (!(ngay instanceof Date)) ngay = new Date(ngay);
+  const chiSoNgay = layIndexTuNgay(ngay, ngayBatDau);
+  const gio = ngay.getHours();
+  const phut = ngay.getMinutes();
+  const giay = ngay.getSeconds();
+  let pixel = chiSoNgay * pixelMoiNgay;
+  pixel += gio * pixelMoiNgay / 24;
+  pixel += phut * pixelMoiNgay / 24 / 60;
+  pixel += giay * pixelMoiNgay / 24 / 3600;
+  return pixel;
 }
 
 // new helpers: lấy ranh giới ngày (bắt đầu của ngày)
-function startOfDay(d) {
-  const dt = (d instanceof Date) ? d : new Date(d);
+function layDauNgay(ngay) {
+  const dt = (ngay instanceof Date) ? ngay : new Date(ngay);
   return new Date(dt.getFullYear(), dt.getMonth(), dt.getDate(), 0, 0, 0, 0);
 }
 
-function getTimeRemaining(endTime) {
-  const now = new Date();
-  const end = new Date(endTime);
-  let diff = end - now;
-  if (diff <= 0) return "Đã kết thúc";
-  let hrs = Math.floor(diff / (1000 * 60 * 60));
-  let mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-  let secs = Math.floor((diff % (1000 * 60)) / 1000);
-  return `Còn lại ${hrs}h ${mins}m ${secs}s`;
+function tinhThoiGianConLai(thoiDiemKetThuc) {
+  const bayGio = new Date();
+  const ketThuc = new Date(thoiDiemKetThuc);
+  let khoangCach = ketThuc - bayGio;
+  if (khoangCach <= 0) return "Đã kết thúc";
+  let gio = Math.floor(khoangCach / (1000 * 60 * 60));
+  let phut = Math.floor((khoangCach % (1000 * 60 * 60)) / (1000 * 60));
+  let giay = Math.floor((khoangCach % (1000 * 60)) / 1000);
+  return `Còn lại ${gio}h ${phut}m ${giay}s`;
 }
-function formatTime24h(date) {
-  return date.getHours().toString().padStart(2, '0')
-    + ':' + date.getMinutes().toString().padStart(2, '0')
-    + ':' + date.getSeconds().toString().padStart(2, '0');
+function dinhDangGio24h(ngay) {
+  return ngay.getHours().toString().padStart(2, '0')
+    + ':' + ngay.getMinutes().toString().padStart(2, '0')
+    + ':' + ngay.getSeconds().toString().padStart(2, '0');
 }
-function scrollToCurrentTime(startDate) {
-  const now = new Date();
-  const left = calcLeftPx(now, startDate);
-  timelineContainer.scrollLeft = left - timelineContainer.clientWidth / 2 + pxPerDay;
+function cuonDenGioHienTai(ngayBatDau) {
+  const bayGio = new Date();
+  const viTriTrai = tinhViTriPixel(bayGio, ngayBatDau);
+  khungTimeline.scrollLeft = viTriTrai - khungTimeline.clientWidth / 2 + pixelMoiNgay;
 }
 
 // Thêm helper để format giá trị datetime-local từ ISO
