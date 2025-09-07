@@ -457,14 +457,45 @@ function showEventModal(ev, thoiGianBatDau, thoiGianKetThuc) {
     <p><strong>Màu sắc:</strong> <span style="display:inline-block;width:20px;height:20px;background:${ev.color};vertical-align:middle;border-radius:4px;margin-left:8px;"></span></p>
   `;
 
-  // Set initial form values
+    // Set initial form values
   document.getElementById('modalEventId').value = ev.id;
   document.getElementById('modalName').value = ev.name;
   document.getElementById('modalStartTime').value = toInputDatetimeLocal(ev.startTime || ev.start);
   document.getElementById('modalEndTime').value = toInputDatetimeLocal(ev.endTime || ev.end);
-  document.getElementById('modalColor').value = ev.color || 'red';
-
-  // Update time remaining
+  
+  // Xử lý color picker
+  const colorPicker = document.getElementById('modalColor');
+  const colorCode = document.getElementById('modalColorCode');
+  
+  // Chuyển đổi tên màu thành mã hex nếu cần
+  const colorMap = {
+    red: '#d32f2f',
+    yellow: '#fbc02d',
+    gray: '#757575',
+    pink: '#e91e63',
+    blue: '#1976d2',
+    indigo: '#5c6bc0'
+  };
+  
+  const initialColor = colorMap[ev.color] || ev.color || '#d32f2f';
+  colorPicker.value = initialColor;
+  colorCode.value = initialColor;
+  
+  // Sync giữa color picker và input text
+  colorPicker.addEventListener('input', function(e) {
+    colorCode.value = e.target.value.toUpperCase();
+  });
+  
+  colorCode.addEventListener('input', function(e) {
+    let value = e.target.value;
+    if (!value.startsWith('#')) {
+      value = '#' + value;
+      e.target.value = value;
+    }
+    if (/^#[0-9A-F]{6}$/i.test(value)) {
+      colorPicker.value = value;
+    }
+  });  // Update time remaining
   function updateTimeRemaining() {
     timeRemaining.textContent = tinhThoiGianConLai(thoiGianKetThuc);
   }
@@ -486,7 +517,7 @@ function showEventModal(ev, thoiGianBatDau, thoiGianKetThuc) {
         name: document.getElementById('modalName').value,
         startTime: new Date(document.getElementById('modalStartTime').value).toISOString(),
         endTime: new Date(document.getElementById('modalEndTime').value).toISOString(),
-        color: document.getElementById('modalColor').value,
+        color: document.getElementById('modalColorCode').value,
         duration: Math.max(1, Math.round((new Date(document.getElementById('modalEndTime').value) - new Date(document.getElementById('modalStartTime').value)) / (1000 * 60 * 60 * 24)))
       };
 

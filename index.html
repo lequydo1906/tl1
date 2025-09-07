@@ -59,20 +59,15 @@
         <input type="datetime-local" id="modalEndTime" required>
         
         <label for="modalColor">Màu sắc</label>
-        <select id="modalColor">
-          <option value="red">Đỏ</option>
-          <option value="yellow">Vàng</option>
-          <option value="gray">Xám</option>
-          <option value="pink">Hồng</option>
-          <option value="blue">Xanh dương</option>
-          <option value="indigo">Xanh tím</option>
-        </select>
+        <div class="color-picker-group">
+          <input type="color" id="modalColor" title="Chọn màu">
+          <input type="text" id="modalColorCode" placeholder="#RRGGBB" maxlength="7">
+        </div>
       </form>
     </div>
 
-    <!-- Button group -->
+    <!-- Close button at bottom -->
     <div class="button-group">
-      <button class="edit-btn" id="modalEditBtn">Sửa</button>
       <button class="close-btn" onclick="closeEventModal()">Đóng</button>
     </div>
   </div>
