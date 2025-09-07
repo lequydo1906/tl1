@@ -96,46 +96,46 @@ function renderTimeline(events) {
     const ngay = layNgayTheoIndex(i, ngayBatDau);
 
     // Đường kẻ dọc ngày tại đúng vị trí 0h
-    const line = document.createElement('div');
-    line.className = "timeline-day-line";
-    line.style.position = "absolute";
-    line.style.left = (i * pixelMoiNgay) + "px";
-    line.style.top = "40px";
-    line.style.height = "460px";
-    line.style.width = "1px";
-    timeline.appendChild(line);
+    const duongKe = document.createElement('div');
+    duongKe.className = "timeline-day-line";
+    duongKe.style.position = "absolute";
+    duongKe.style.left = (i * pixelMoiNgay) + "px";
+    duongKe.style.top = "40px";
+    duongKe.style.height = "460px";
+    duongKe.style.width = "1px";
+    timeline.appendChild(duongKe);
 
     // Số ngày nằm trên đầu đường kẻ
-    const num = document.createElement('div');
-    num.className = "date-col";
-    num.style.position = 'absolute';
-    num.style.left = (i * pixelMoiNgay - 15) + 'px'; // Canh giữa số với đường kẻ
-    num.style.top = "0px";
-    num.innerText = ngay.getDate();
-    timeline.appendChild(num);
+    const soNgayHienThi = document.createElement('div');
+    soNgayHienThi.className = "date-col";
+    soNgayHienThi.style.position = 'absolute';
+    soNgayHienThi.style.left = (i * pixelMoiNgay - 15) + 'px'; // Canh giữa số với đường kẻ
+    soNgayHienThi.style.top = "0px";
+    soNgayHienThi.innerText = ngay.getDate();
+    timeline.appendChild(soNgayHienThi);
   }
 
   // Đường chỉ thời gian hiện tại (24h format)
-  function renderCurrentTimeBar() {
+  function hienThiDongThoiGianHienTai() {
     const bayGio = new Date();
     const viTriTrai = tinhViTriPixel(bayGio, ngayBatDau);
-    let dongThoiGianHienTai = timeline.querySelector('.current-time-row');
-    if (!dongThoiGianHienTai) {
-      dongThoiGianHienTai = document.createElement('div');
-      dongThoiGianHienTai.className = "current-time-row";
-      timeline.appendChild(dongThoiGianHienTai);
+    let dongThoiGian = timeline.querySelector('.current-time-row');
+    if (!dongThoiGian) {
+      dongThoiGian = document.createElement('div');
+      dongThoiGian.className = "current-time-row";
+      timeline.appendChild(dongThoiGian);
     }
-    dongThoiGianHienTai.style.left = viTriTrai + "px";
-    dongThoiGianHienTai.style.top = "40px";
-    dongThoiGianHienTai.style.width = "2px";
-    dongThoiGianHienTai.style.height = "460px";
-    dongThoiGianHienTai.innerHTML = `<div class="current-time-line"></div>
+    dongThoiGian.style.left = viTriTrai + "px";
+    dongThoiGian.style.top = "40px";
+    dongThoiGian.style.width = "2px";
+    dongThoiGian.style.height = "460px";
+    dongThoiGian.innerHTML = `<div class="current-time-line"></div>
       <div class="current-time-label" style="top:-32px;left:-40px;">${dinhDangGio24h(bayGio)}</div>`;
     cuonDenGioHienTai(ngayBatDau);
   }
-  renderCurrentTimeBar();
+  hienThiDongThoiGianHienTai();
   if (window.__timelineTimer) clearInterval(window.__timelineTimer);
-  window.__timelineTimer = setInterval(renderCurrentTimeBar, 1000);
+  window.__timelineTimer = setInterval(hienThiDongThoiGianHienTai, 1000);
 
   // Event-bar
   timeline.querySelectorAll(".event-bar").forEach(e => e.remove());
@@ -145,71 +145,42 @@ function renderTimeline(events) {
     const thoiGianBatDau = ev.startTime ? new Date(ev.startTime) : new Date(ev.start);
     const thoiGianKetThuc = ev.endTime ? new Date(ev.endTime) : new Date(ev.end || ev.start);
 
-    // Tính toán cho điểm bắt đầu
-    const chiSoNgayBatDau = layIndexTuNgay(thoiGianBatDau, ngayBatDau);
-    const viTriKeDauNgayBatDau = Math.floor(chiSoNgayBatDau) * pixelMoiNgay;
-    const viTriKeCuoiNgayBatDau = (Math.floor(chiSoNgayBatDau) + 1) * pixelMoiNgay;
-    const tyLeGioBatDau = (
-      thoiGianBatDau.getHours() + 
-      thoiGianBatDau.getMinutes()/60 + 
-      thoiGianBatDau.getSeconds()/3600
-    ) / 24;
-    
-    // Tính toán cho điểm kết thúc
-    const chiSoNgayKetThuc = layIndexTuNgay(thoiGianKetThuc, ngayBatDau);
-    const viTriKeDauNgayKetThuc = Math.floor(chiSoNgayKetThuc) * pixelMoiNgay;
-    const viTriKeCuoiNgayKetThuc = (Math.floor(chiSoNgayKetThuc) + 1) * pixelMoiNgay;
-    const tyLeGioKetThuc = (
-      thoiGianKetThuc.getHours() + 
-      thoiGianKetThuc.getMinutes()/60 + 
-      thoiGianKetThuc.getSeconds()/3600
-    ) / 24;
 
-    // Tính vị trí pixel chính xác
-    const viTriBatDauChinhXac = viTriKeDauNgayBatDau + 
-      (viTriKeCuoiNgayBatDau - viTriKeDauNgayBatDau) * tyLeGioBatDau;
-    const viTriKetThucChinhXac = viTriKeDauNgayKetThuc + 
-      (viTriKeCuoiNgayKetThuc - viTriKeDauNgayKetThuc) * tyLeGioKetThuc;
+  // Tính vị trí pixel bắt đầu và kết thúc (không lặp biến, không log thừa)
+  const chiSoNgayBatDau = layIndexTuNgay(thoiGianBatDau, ngayBatDau);
+  const tyLeGioBatDau = (thoiGianBatDau.getHours() + thoiGianBatDau.getMinutes()/60 + thoiGianBatDau.getSeconds()/3600) / 24;
+  const viTriBatDau = (Math.floor(chiSoNgayBatDau) * pixelMoiNgay) + (pixelMoiNgay * tyLeGioBatDau);
 
-    // Giới hạn trong phạm vi timeline
-    const viTriTrai = Math.max(0, Math.min(viTriBatDauChinhXac, soNgay * pixelMoiNgay));
-    const viTriPhai = Math.max(0, Math.min(viTriKetThucChinhXac, soNgay * pixelMoiNgay));
-    
-    // Chiều rộng tối thiểu 4px
-    const chieuRong = Math.max(viTriPhai - viTriTrai, 4);
+  const chiSoNgayKetThuc = layIndexTuNgay(thoiGianKetThuc, ngayBatDau);
+  const tyLeGioKetThuc = (thoiGianKetThuc.getHours() + thoiGianKetThuc.getMinutes()/60 + thoiGianKetThuc.getSeconds()/3600) / 24;
+  const viTriKetThuc = (Math.floor(chiSoNgayKetThuc) * pixelMoiNgay) + (pixelMoiNgay * tyLeGioKetThuc);
 
-    // Log để debug
-    console.log('Debug thông tin:', {
-      suKien: ev.name,
-      thoiGianKetThuc: thoiGianKetThuc.toLocaleString(),
+  const viTriTrai = Math.max(0, Math.min(viTriBatDau, soNgay * pixelMoiNgay));
+  const viTriPhai = Math.max(0, Math.min(viTriKetThuc, soNgay * pixelMoiNgay));
+  const chieuRong = Math.max(viTriPhai - viTriTrai, 4);
+
+    // Log tạm thời để debug
+    console.log('[DEBUG EVENT]', {
+      name: ev.name,
+      start: thoiGianBatDau.toLocaleString(),
+      end: thoiGianKetThuc.toLocaleString(),
+      chiSoNgayBatDau,
+      tyLeGioBatDau,
+      viTriBatDau,
       chiSoNgayKetThuc,
       tyLeGioKetThuc,
-      viTriKeDauNgayKetThuc,
-      viTriKetThucChinhXac,
-      viTriPhai,
-      chieuRong
-    });
-    
-
-    // Debug: Thêm thông tin để kiểm tra
-    console.log('Thông tin event:', {
-      ten: ev.name,
-      thoiGianKetThuc: thoiGianKetThuc.toLocaleString(),
-      chiSoNgayKetThuc,
-      phanTramThoiGianTrongNgay,
-      viTriKeDoc,
       viTriKetThuc,
+      viTriTrai,
       viTriPhai,
       chieuRong
     });
 
-
-    const thanh = document.createElement('div');
-    thanh.className = `event-bar ${ev.color || ""}`;
-    thanh.style.left = viTriHienThi + "px";
-    thanh.style.top = (60 + idx * 44) + "px";
-    thanh.style.width = doRong + "px";
-    thanh.style.height = "36px";
+  const thanh = document.createElement('div');
+  thanh.className = `event-bar ${ev.color || ""}`;
+  thanh.style.left = viTriTrai + "px";
+  thanh.style.top = (60 + idx * 44) + "px";
+  thanh.style.width = chieuRong + "px";
+  thanh.style.height = "36px";
 
     // Nội dung: tên + thời gian (ẩn mặc định) + nút sửa/xóa (ẩn mặc định, hiện khi hover)
     thanh.innerHTML = `<div class="event-title">${ev.name}</div>
