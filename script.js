@@ -22,8 +22,8 @@ function layNgayHienTai() {
 }
 function layNgayBatDauKetThuc() {
   const homNay = layNgayHienTai();
-  const ngayBatDau = new Date(homNay.getFullYear(), homNay.getMonth(), homNay.getDate() - 4, 0, 0, 0, 0);
-  const ngayKetThuc = new Date(homNay.getFullYear(), homNay.getMonth(), homNay.getDate() + 9, 0, 0, 0, 0);
+  const ngayBatDau = new Date(homNay.getFullYear(), homNay.getMonth(), homNay.getDate() - 7, 0, 0, 0, 0);
+  const ngayKetThuc = new Date(homNay.getFullYear(), homNay.getMonth(), homNay.getDate() + 6, 0, 0, 0, 0);
   return { ngayBatDau, ngayKetThuc };
 }
 function demSoNgay(ngayBatDau, ngayKetThuc) {
@@ -144,16 +144,16 @@ function renderTimeline(events) {
     const start = ev.startTime ? new Date(ev.startTime) : new Date(ev.start);
     const end = ev.endTime ? new Date(ev.endTime) : new Date(ev.end || ev.start);
 
-    // Tính vị trí bắt đầu và ngày kết thúc
-    const left = Math.max(0, Math.min(calcLeftPx(start, startDate), daysCount * pxPerDay));
-    const endDayIndex = getDateIndexFromDate(end, startDate);
+    // Tính vị trí bắt đầu và kết thúc sử dụng cùng một hàm tinhViTriPixel
+    const viTriBatDau = tinhViTriPixel(start, ngayBatDau);
+    const viTriKetThuc = tinhViTriPixel(end, ngayBatDau);
     
-    // Tính vị trí kết thúc theo thời gian trong ngày
-    const hourProgress = (end.getHours() + end.getMinutes()/60 + end.getSeconds()/3600) / 24;
-    const rightPosition = (endDayIndex * pxPerDay) + (hourProgress * pxPerDay);
+    // Đảm bảo vị trí nằm trong phạm vi timeline
+    const left = Math.max(0, Math.min(viTriBatDau, soNgay * pixelMoiNgay));
+    const right = Math.max(0, Math.min(viTriKetThuc, soNgay * pixelMoiNgay));
     
-    // Chiều rộng là khoảng cách từ điểm bắt đầu đến điểm kết thúc
-    const width = Math.max(Math.min(rightPosition - left, daysCount * pxPerDay - left), 4);
+    // Chiều rộng là khoảng cách giữa hai vị trí
+    const width = Math.max(right - left, 4);
 
 
     const bar = document.createElement('div');
