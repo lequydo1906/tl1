@@ -190,12 +190,6 @@ function renderTimeline(events) {
       chieuRong
     });
     
-    // Đảm bảo vị trí nằm trong phạm vi timeline
-    const viTriTrai = Math.max(0, Math.min(viTriBatDau, soNgay * pixelMoiNgay));
-    const viTriPhai = Math.max(0, Math.min(viTriKetThuc, soNgay * pixelMoiNgay));
-    
-    // Chiều rộng chính xác theo thời gian thực, tối thiểu 4px
-    const chieuRong = Math.max(viTriPhai - viTriTrai, 4);
 
     // Debug: Thêm thông tin để kiểm tra
     console.log('Thông tin event:', {
