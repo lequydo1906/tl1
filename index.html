@@ -35,9 +35,41 @@
   <div class="modal-backdrop" id="modalBackdrop"></div>
   <div class="event-modal" id="eventModal">
     <h2 id="modalTitle"></h2>
+    
+    <!-- View mode -->
     <div class="event-details" id="modalDetails"></div>
     <div class="time-remaining" id="modalTimeRemaining"></div>
-    <button class="close-btn" onclick="closeEventModal()">Đóng</button>
+    
+    <!-- Edit form -->
+    <div class="event-form" id="modalForm">
+      <form id="modalEventForm">
+        <input type="hidden" id="modalEventId">
+        <label for="modalName">Tên sự kiện</label>
+        <input type="text" id="modalName" required>
+        
+        <label for="modalStartTime">Thời gian bắt đầu</label>
+        <input type="datetime-local" id="modalStartTime" required>
+        
+        <label for="modalEndTime">Thời gian kết thúc</label>
+        <input type="datetime-local" id="modalEndTime" required>
+        
+        <label for="modalColor">Màu sắc</label>
+        <select id="modalColor">
+          <option value="red">Đỏ</option>
+          <option value="yellow">Vàng</option>
+          <option value="gray">Xám</option>
+          <option value="pink">Hồng</option>
+          <option value="blue">Xanh dương</option>
+          <option value="indigo">Xanh tím</option>
+        </select>
+      </form>
+    </div>
+
+    <!-- Button group -->
+    <div class="button-group">
+      <button class="edit-btn" id="modalEditBtn">Sửa</button>
+      <button class="close-btn" onclick="closeEventModal()">Đóng</button>
+    </div>
   </div>
 
   <script src="script.js"></script>

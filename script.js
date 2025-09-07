@@ -256,13 +256,12 @@ const widthPercent = Math.max(rightPercent - leftPercent, (4 / (khungTimeline.cl
     thanh.style.width = widthPercent + "%";
     thanh.style.height = "36px";
 
-    // Nội dung: tên + thời gian (ẩn mặc định) + nút sửa/xóa (ẩn mặc định, hiện khi hover)
+    // Nội dung: tên + thời gian + nút xóa
     thanh.innerHTML = `<div class="event-title">${ev.name}</div>
       <span class="time-info" style="margin-left:8px;font-size:0.9em;">
         ${thoiGianBatDau.getDate()}/${thoiGianBatDau.getMonth()+1} ${dinhDangGio24h(thoiGianBatDau)}
         - ${thoiGianKetThuc.getDate()}/${thoiGianKetThuc.getMonth()+1} ${dinhDangGio24h(thoiGianKetThuc)}
       </span>
-      <button class="edit-btn" title="Sửa" onclick="(function(ev){ return function(e){ e.stopPropagation(); startEditEvent(ev); }})(JSON.parse('${JSON.stringify({ id: ev.id, name: ev.name, color: ev.color, startTime: ev.startTime || ev.start, endTime: ev.endTime || ev.end })}'))(event)">Sửa</button>
       <button class="delete-btn" onclick="(function(id){ return function(e){ e.stopPropagation(); if(confirm('Xóa sự kiện?')) deleteEvent(id); }} )('${ev.id}')(event)">Xóa</button>`;
 
     // Thêm sự kiện click để mở modal
@@ -392,8 +391,10 @@ function showEventModal(ev, thoiGianBatDau, thoiGianKetThuc) {
   const title = document.getElementById('modalTitle');
   const details = document.getElementById('modalDetails');
   const timeRemaining = document.getElementById('modalTimeRemaining');
+  const form = document.getElementById('modalForm');
+  const editBtn = document.getElementById('modalEditBtn');
 
-  // Set content
+  // Set content for view mode
   title.textContent = ev.name;
   details.innerHTML = `
     <p><strong>Thời gian bắt đầu:</strong> ${thoiGianBatDau.toLocaleString('vi-VN')}</p>
@@ -401,6 +402,13 @@ function showEventModal(ev, thoiGianBatDau, thoiGianKetThuc) {
     <p><strong>Thời lượng:</strong> ${ev.duration} ngày</p>
     <p><strong>Màu sắc:</strong> <span style="display:inline-block;width:20px;height:20px;background:${ev.color};vertical-align:middle;border-radius:4px;margin-left:8px;"></span></p>
   `;
+
+  // Set initial form values
+  document.getElementById('modalEventId').value = ev.id;
+  document.getElementById('modalName').value = ev.name;
+  document.getElementById('modalStartTime').value = toInputDatetimeLocal(ev.startTime || ev.start);
+  document.getElementById('modalEndTime').value = toInputDatetimeLocal(ev.endTime || ev.end);
+  document.getElementById('modalColor').value = ev.color || 'red';
 
   // Update time remaining
   function updateTimeRemaining() {
@@ -412,6 +420,32 @@ function showEventModal(ev, thoiGianBatDau, thoiGianKetThuc) {
   // Show modal
   modal.style.display = 'block';
   backdrop.style.display = 'block';
+  details.style.display = 'block';
+  form.classList.remove('active');
+  editBtn.textContent = 'Sửa';
+
+  // Handle edit button
+  editBtn.onclick = function() {
+    if (form.classList.contains('active')) {
+      // Save changes
+      const formData = {
+        name: document.getElementById('modalName').value,
+        startTime: new Date(document.getElementById('modalStartTime').value).toISOString(),
+        endTime: new Date(document.getElementById('modalEndTime').value).toISOString(),
+        color: document.getElementById('modalColor').value,
+        duration: Math.max(1, Math.round((new Date(document.getElementById('modalEndTime').value) - new Date(document.getElementById('modalStartTime').value)) / (1000 * 60 * 60 * 24)))
+      };
+
+      db.collection("events").doc(ev.id).update(formData).then(() => {
+        closeEventModal();
+      });
+    } else {
+      // Switch to edit mode
+      details.style.display = 'none';
+      form.classList.add('active');
+      editBtn.textContent = 'Lưu';
+    }
+  };
 
   // Close when clicking backdrop
   backdrop.onclick = function() {
