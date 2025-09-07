@@ -145,21 +145,42 @@ function renderTimeline(events) {
     const thoiGianBatDau = ev.startTime ? new Date(ev.startTime) : new Date(ev.start);
     const thoiGianKetThuc = ev.endTime ? new Date(ev.endTime) : new Date(ev.end || ev.start);
 
-    // Tính thời gian chính xác từ dữ liệu sự kiện
-    const thoiGianBatDauMs = thoiGianBatDau.getTime();
-    const thoiGianKetThucMs = thoiGianKetThuc.getTime();
-    const ngayBatDauMs = ngayBatDau.getTime();
-    
-    // Tính toán vị trí pixel dựa trên thời gian thực
-    const viTriBatDau = ((thoiGianBatDauMs - ngayBatDauMs) / (24 * 60 * 60 * 1000)) * pixelMoiNgay;
-    const viTriKetThuc = ((thoiGianKetThucMs - ngayBatDauMs) / (24 * 60 * 60 * 1000)) * pixelMoiNgay;
+    // 1. Tính ngày kết thúc và vị trí đường kẻ dọc tương ứng
+    const ngayKetThuc = layDauNgay(thoiGianKetThuc);
+    const chiSoNgayKetThuc = layIndexTuNgay(ngayKetThuc, ngayBatDau);
+    const viTriKeDoc = chiSoNgayKetThuc * pixelMoiNgay;
+
+    // 2. Tính vị trí kết thúc chính xác dựa trên thời gian
+    const phanTramThoiGianTrongNgay = (
+      thoiGianKetThuc.getHours() * 3600 +
+      thoiGianKetThuc.getMinutes() * 60 +
+      thoiGianKetThuc.getSeconds()
+    ) / (24 * 3600);
+
+    // 3. Tính vị trí pixel chính xác cho điểm kết thúc
+    const viTriKetThuc = viTriKeDoc + (phanTramThoiGianTrongNgay * pixelMoiNgay);
+
+    // 4. Tính vị trí bắt đầu
+    const viTriBatDau = tinhViTriPixel(thoiGianBatDau, ngayBatDau);
     
     // Đảm bảo vị trí nằm trong phạm vi timeline
     const viTriTrai = Math.max(0, Math.min(viTriBatDau, soNgay * pixelMoiNgay));
     const viTriPhai = Math.max(0, Math.min(viTriKetThuc, soNgay * pixelMoiNgay));
     
-    // Chiều rộng phải chính xác theo thời gian thực, tối thiểu 4px
+    // Chiều rộng chính xác theo thời gian thực, tối thiểu 4px
     const chieuRong = Math.max(viTriPhai - viTriTrai, 4);
+
+    // Debug: Thêm thông tin để kiểm tra
+    console.log('Thông tin event:', {
+      ten: ev.name,
+      thoiGianKetThuc: thoiGianKetThuc.toLocaleString(),
+      chiSoNgayKetThuc,
+      phanTramThoiGianTrongNgay,
+      viTriKeDoc,
+      viTriKetThuc,
+      viTriPhai,
+      chieuRong
+    });
 
 
     const thanh = document.createElement('div');
