@@ -143,14 +143,15 @@ function renderTimeline(events) {
     const start = ev.startTime ? new Date(ev.startTime) : new Date(ev.start);
     const end = ev.endTime ? new Date(ev.endTime) : new Date(ev.end || ev.start);
 
-        // Tính vị trí chính xác dựa trên thời gian thực của sự kiện
-    const rawLeft = calcLeftPx(start, startDate);
-    const rawRight = calcLeftPx(end, startDate);
-    const minLeft = 0;
-    const maxRight = daysCount * pxPerDay;
-    const left = Math.max(minLeft, Math.min(rawLeft, maxRight));
-    const right = Math.max(minLeft, Math.min(rawRight, maxRight));
-    const width = Math.max(right - left, 4);
+        // Tính vị trí bắt đầu
+    const left = Math.max(0, Math.min(calcLeftPx(start, startDate), daysCount * pxPerDay));
+    
+    // Tính chiều rộng dựa trên khoảng thời gian
+    const width = Math.max(
+      (end.getTime() - start.getTime()) * pxPerDay / (24 * 60 * 60 * 1000), 
+      4
+    );
+
 
     const bar = document.createElement('div');
     bar.className = `event-bar ${ev.color || ""}`;
