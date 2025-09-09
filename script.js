@@ -14,27 +14,7 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-// Initialize to a default value, will be updated when DOM is ready
-let pixelsPerDay = 100;
-
-// Wait for DOM to be fully loaded
-document.addEventListener('DOMContentLoaded', () => {
-  console.log('DOM fully loaded');
-  // Initial setup
-  updatePixelsPerDay();
-  
-  // Update on resize
-  window.addEventListener('resize', () => {
-    updatePixelsPerDay();
-    if (window._lastEvents) {
-      renderTimeline(window._lastEvents);
-    }
-  });
-  
-  // Start listening for Firestore updates
-  console.log('Starting Firestore listener');
-  startFirestoreListener();
-});
+let pixelsPerDay = Math.floor(window.innerWidth / 14);
 
 function getToday() {
   const now = new Date();
@@ -56,16 +36,13 @@ const timelineScrollArea = document.querySelector('.timeline-scroll-area');
 
 // No more resize, just update pixelsPerDay on load/resize window
 function updatePixelsPerDay() {
-  const timeline = document.querySelector('.timeline');
-  if (!timeline) {
-    console.error('Timeline element not found');
-    return;
-  }
-  const totalWidth = timeline.clientWidth;
-  const totalDays = moment(timelineEnd).diff(timelineStart, 'days');
-  console.log(`Updating pixelsPerDay: width=${totalWidth}, days=${totalDays}`);
-  pixelsPerDay = totalWidth / totalDays;
+  pixelsPerDay = Math.floor(timelineScrollArea.clientWidth / 14);
 }
+
+window.addEventListener('resize', () => {
+  updatePixelMoiNgay();
+  renderTimeline(window._lastEvents || []);
+});
 
 // Khởi tạo lại pixelMoiNgay khi load
 updatePixelMoiNgay();
@@ -140,11 +117,7 @@ function scrollToCurrentTime(startDate) {
 // Helper: Chuyển ISO/UTC về local string cho input datetime-local (yyyy-MM-ddTHH:mm)
 function toInputDatetimeLocal(iso) {
   if (!iso) return '';
-  const dt = new Date(iso);
-  dt.setMinutes(dt.getMinutes() - dt.getTimezoneOffset());
-  return dt.toISOString().slice(0, 16);
-}
-function renderTimeline(events) {
+  function renderTimeline(events) {
     const { startDate, endDate } = getStartEndDates();
     const numDays = countDays(startDate, endDate);
 
@@ -329,7 +302,18 @@ function renderTimeline(events) {
       };
       bar.onmouseleave = function() {
         tooltip.style.display = "none";
-}
+      };
+
+      timeline.appendChild(bar);
+    });
+  }
+      nutGiup.style.left = (e.pageX + 12) + "px";
+      nutGiup.style.top = (e.pageY - 10) + "px";
+      nutGiup.style.display = "block";
+    };
+    thanh.onmouseleave = function() {
+      nutGiup.style.display = "none";
+    };
 
     timeline.appendChild(thanh);
   });
@@ -344,7 +328,7 @@ db.collection("events").onSnapshot(snap => {
     const endTime = data.endTime || data.end || data.start;
     if (endTime) {
       const end = new Date(endTime);
-      // If ended >24h ago, hide from UI only, DO NOT delete from Firestore
+      // Nếu đã kết thúc >24h thì chỉ ẩn khỏi giao diện, KHÔNG xóa khỏi Firestore
       if (now - end > 24 * 60 * 60 * 1000) {
         doc.ref.delete().catch(()=>{});
         return; // skip pushing this event
@@ -352,39 +336,39 @@ db.collection("events").onSnapshot(snap => {
     }
     events.push(data);
   });
-  // Function to classify event status
+  // Hàm phân loại trạng thái sự kiện
   function getEventStatus(event) {
     const now = new Date();
     const endTime = new Date(event.endTime || event.end || event.start);
     const timeLeft = endTime - now;
     
     if (timeLeft < 0) {
-      // Has ended
+      // Đã kết thúc
       return {status: 'ended', timeAgo: Math.abs(timeLeft)};
     } else {
-      // Still active
+      // Chưa kết thúc
       return {status: 'active', timeLeft: timeLeft};
     }
   }
 
-  // Sort events by new rules
+  // Sắp xếp sự kiện theo quy tắc mới
   events.sort((a, b) => {
     const statusA = getEventStatus(a);
     const statusB = getEventStatus(b);
     
-    // If both are active
+    // Nếu cả hai đều đang hoạt động
     if (statusA.status === 'active' && statusB.status === 'active') {
-      // Sort by remaining time (less -> more)
+      // Sắp xếp theo thời gian còn lại (ít -> nhiều)
       return statusA.timeLeft - statusB.timeLeft;
     }
     
-    // If both have ended
+    // Nếu cả hai đều đã kết thúc
     if (statusA.status === 'ended' && statusB.status === 'ended') {
-      // Sort by end time (recently ended -> ended long ago)
+      // Sắp xếp theo thời gian đã kết thúc (mới kết thúc -> kết thúc lâu)
       return statusA.timeAgo - statusB.timeAgo;
     }
     
-    // Active events always above ended events
+    // Sự kiện đang hoạt động luôn ở trên sự kiện đã kết thúc
     return statusA.status === 'active' ? -1 : 1;
   });
 
@@ -392,7 +376,7 @@ db.collection("events").onSnapshot(snap => {
   renderTimeline(events);
 });
 
-// Add edit/cancel support for form
+// Thêm hỗ trợ sửa/cancel cho form
 const editIdInput = document.createElement('input');
 editIdInput.type = 'hidden';
 editIdInput.id = 'editId';
@@ -412,11 +396,11 @@ cancelBtn.onclick = () => {
   document.querySelector('#eventForm button[type="submit"]').textContent = 'Thêm sự kiện';
 };
 
-// Helper to set form from event when editing
+// Thêm helper để set form từ event khi edit
 function startEditEvent(ev) {
   document.getElementById('name').value = ev.name || '';
   
-  // Handle color
+  // Xử lý màu sắc
   const colorMap = {
     red: '#d32f2f',
     yellow: '#fbc02d',
@@ -429,21 +413,21 @@ function startEditEvent(ev) {
   document.getElementById('color').value = eventColor;
   document.getElementById('colorCode').value = eventColor;
   
-  // Preserve time values
+  // Đảm bảo giữ nguyên giá trị thời gian
   const startTime = ev.startTime || ev.start;
   const endTime = ev.endTime || ev.end;
   
   if (startTime) {
     const startInput = document.getElementById('startTime');
     startInput.value = toInputDatetimeLocal(startTime);
-    // Save original value for change validation
+    // Lưu giá trị gốc để kiểm tra thay đổi
     startInput.setAttribute('data-original', startInput.value);
   }
   
   if (endTime) {
     const endInput = document.getElementById('endTime');
     endInput.value = toInputDatetimeLocal(endTime);
-    // Save original value for change validation
+    // Lưu giá trị gốc để kiểm tra thay đổi
     endInput.setAttribute('data-original', endInput.value);
   }
   
@@ -451,7 +435,7 @@ function startEditEvent(ev) {
   document.querySelector('#eventForm button[type="submit"]').textContent = 'Lưu thay đổi';
   cancelBtn.style.display = 'inline-block';
   
-  // Add input change validation
+  // Thêm kiểm tra khi input thay đổi
   ['startTime', 'endTime'].forEach(id => {
     const input = document.getElementById(id);
     input.addEventListener('change', function() {
@@ -462,7 +446,7 @@ function startEditEvent(ev) {
   });
 }
 
-// Handle color picker in add event form
+// Xử lý color picker trong form thêm sự kiện
 const addEventColorPicker = document.getElementById('color');
 const addEventColorCode = document.getElementById('colorCode');
 
