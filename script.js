@@ -183,13 +183,62 @@ function toInputDatetimeLocal(iso) {
 function renderTimeline(events) {
   const { ngayBatDau, ngayKetThuc } = layNgayBatDauKetThuc();
   const soNgay = demSoNgay(ngayBatDau, ngayKetThuc);
+
   timeline.innerHTML = "";
   timeline.style.width = (soNgay * pixelMoiNgay) + "px";
 
-  // Đường kẻ dọc + số ngày nằm trên đầu đường kẻ
+  // --- DÒNG THÁNG ---
+  let thangHienTai = -1;
+  let thangBatDauIdx = 0;
+  for (let i = 0; i <= soNgay; i++) {
+    const ngay = layNgayTheoIndex(i, ngayBatDau);
+    if (i === soNgay || ngay.getMonth() !== thangHienTai) {
+      if (thangHienTai !== -1) {
+        // Vẽ box tháng
+        const thangBox = document.createElement('div');
+        thangBox.className = 'month-label';
+        thangBox.style.position = 'absolute';
+        thangBox.style.left = (thangBatDauIdx * pixelMoiNgay) + 'px';
+        thangBox.style.top = '-32px';
+        thangBox.style.width = ((i - thangBatDauIdx) * pixelMoiNgay) + 'px';
+        thangBox.style.height = '28px';
+        thangBox.style.lineHeight = '28px';
+        thangBox.style.textAlign = 'center';
+        thangBox.style.fontWeight = 'bold';
+        thangBox.style.fontSize = '1.1em';
+        thangBox.style.background = 'rgba(255,255,255,0.07)';
+        thangBox.style.borderRadius = '8px 8px 0 0';
+        thangBox.style.color = '#FFD600';
+        thangBox.innerText = `Tháng ${thangHienTai+1}`;
+        timeline.appendChild(thangBox);
+      }
+      thangHienTai = ngay.getMonth();
+      thangBatDauIdx = i;
+    }
+  }
+
+  // --- DÒNG WEEKDAY ---
   for (let i = 0; i < soNgay; i++) {
     const ngay = layNgayTheoIndex(i, ngayBatDau);
+    const weekday = ['CN','T2','T3','T4','T5','T6','T7'][ngay.getDay()];
+    const weekdayDiv = document.createElement('div');
+    weekdayDiv.className = 'weekday-label';
+    weekdayDiv.style.position = 'absolute';
+    weekdayDiv.style.left = (i * pixelMoiNgay - 15) + 'px';
+    weekdayDiv.style.top = '-4px';
+    weekdayDiv.style.width = '30px';
+    weekdayDiv.style.height = '20px';
+    weekdayDiv.style.textAlign = 'center';
+    weekdayDiv.style.color = '#FFD600';
+    weekdayDiv.style.fontWeight = 'bold';
+    weekdayDiv.style.fontSize = '0.95em';
+    weekdayDiv.innerText = weekday;
+    timeline.appendChild(weekdayDiv);
+  }
 
+  // --- DÒNG NGÀY ---
+  for (let i = 0; i < soNgay; i++) {
+    const ngay = layNgayTheoIndex(i, ngayBatDau);
     // Đường kẻ dọc ngày tại đúng vị trí 0h
     const duongKe = document.createElement('div');
     duongKe.className = "timeline-day-line";
@@ -205,7 +254,7 @@ function renderTimeline(events) {
     soNgayHienThi.className = "date-col";
     soNgayHienThi.style.position = 'absolute';
     soNgayHienThi.style.left = (i * pixelMoiNgay - 15) + 'px'; // Canh giữa số với đường kẻ
-    soNgayHienThi.style.top = "0px";
+    soNgayHienThi.style.top = "20px";
     soNgayHienThi.innerText = ngay.getDate();
     timeline.appendChild(soNgayHienThi);
   }
