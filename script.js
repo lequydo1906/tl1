@@ -14,7 +14,7 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-const pixelMoiNgay = Math.floor(window.innerWidth / 14);
+let pixelMoiNgay = Math.floor(window.innerWidth / 14);
 
 function layNgayHienTai() {
   const bayGio = new Date();
