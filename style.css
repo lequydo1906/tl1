@@ -107,18 +107,6 @@ form #colorCode {
   display: none;
 }
 
-/* Handle resize */
-#timeline-container::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  right: 0;
-  width: 15px;
-  height: 15px;
-  cursor: nw-resize;
-  background: linear-gradient(135deg, transparent 50%, #FFD600 50%);
-  border-radius: 0 0 10px 0;
-}
 
 #timeline {
   position: relative;
