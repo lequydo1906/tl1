@@ -138,6 +138,7 @@ function renderTimeline(events) {
     // --- MONTH HEADER ---
     let currentMonth = -1;
     let monthStartIdx = 0;
+    const monthHeaders = [];
     for (let i = 0; i <= numDays; i++) {
       const date = getDateByIndex(i, startDate);
       if (i === numDays || date.getMonth() !== currentMonth) {
@@ -148,7 +149,7 @@ function renderTimeline(events) {
           monthHeader.style.left = (monthStartIdx * pixelsPerDay) + 'px';
           monthHeader.style.width = ((i - monthStartIdx) * pixelsPerDay) + 'px';
           monthHeader.innerText = `Tháng ${currentMonth+1} / ${date.getFullYear()}`;
-          timeline.appendChild(monthHeader);
+          monthHeaders.push(monthHeader);
         }
         currentMonth = date.getMonth();
         monthStartIdx = i;
@@ -169,9 +170,12 @@ function renderTimeline(events) {
       const dayLabel = document.createElement('div');
       dayLabel.className = 'day-label';
       dayLabel.style.left = (i * pixelsPerDay - 20) + 'px';
-      dayLabel.innerHTML = `<span class="day-of-week">${weekdayNames[date.getDay()]}</span><span class="day-number">${date.getDate()}</span>`;
+      dayLabel.innerHTML = `<span class=\"day-of-week\">${weekdayNames[date.getDay()]}<\/span><span class=\"day-number\">${date.getDate()}<\/span>`;
       timeline.appendChild(dayLabel);
     }
+
+    // Thêm tiêu đề tháng lên trên cùng (appendChild sau cùng để nằm trên các label khác)
+    monthHeaders.forEach(header => timeline.appendChild(header));
 
     // Current time line (24h format)
     function showCurrentTimeLine() {
