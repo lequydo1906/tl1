@@ -14,29 +14,29 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-let pixelMoiNgay = Math.floor(window.innerWidth / 14);
+let pixelsPerDay = Math.floor(window.innerWidth / 14);
 
-function layNgayHienTai() {
-  const bayGio = new Date();
-  return new Date(bayGio.getFullYear(), bayGio.getMonth(), bayGio.getDate(), 0, 0, 0, 0);
+function getToday() {
+  const now = new Date();
+  return new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
 }
-function layNgayBatDauKetThuc() {
-  const homNay = layNgayHienTai();
-  const ngayBatDau = new Date(homNay.getFullYear(), homNay.getMonth(), homNay.getDate() - 7, 0, 0, 0, 0);
-  const ngayKetThuc = new Date(homNay.getFullYear(), homNay.getMonth(), homNay.getDate() + 6, 0, 0, 0, 0);
-  return { ngayBatDau, ngayKetThuc };
+function getStartEndDates() {
+  const today = getToday();
+  const startDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 7, 0, 0, 0, 0);
+  const endDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 6, 0, 0, 0, 0);
+  return { startDate, endDate };
 }
-function demSoNgay(ngayBatDau, ngayKetThuc) {
-  return Math.round((ngayKetThuc - ngayBatDau) / (1000 * 60 * 60 * 24)) + 1;
+function countDays(startDate, endDate) {
+  return Math.round((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
 }
 
 
 const timeline = document.getElementById('timeline');
-const khungTimeline = document.querySelector('.timeline-scroll-area');
+const timelineScrollArea = document.querySelector('.timeline-scroll-area');
 
-// Không còn resize, chỉ cần updatePixelMoiNgay khi load/resize window
-function updatePixelMoiNgay() {
-    pixelMoiNgay = Math.floor(khungTimeline.clientWidth / 14);
+// No more resize, just update pixelsPerDay on load/resize window
+function updatePixelsPerDay() {
+  pixelsPerDay = Math.floor(timelineScrollArea.clientWidth / 14);
 }
 
 window.addEventListener('resize', () => {
@@ -47,283 +47,266 @@ window.addEventListener('resize', () => {
 // Khởi tạo lại pixelMoiNgay khi load
 updatePixelMoiNgay();
 
-function layNgayTheoIndex(idx, ngayBatDau) {
-  return new Date(ngayBatDau.getTime() + idx * 24 * 60 * 60 * 1000);
+function getDateByIndex(idx, startDate) {
+  return new Date(startDate.getTime() + idx * 24 * 60 * 60 * 1000);
 }
-function layIndexTuNgay(ngay, ngayBatDau) {
-  if (!(ngay instanceof Date)) ngay = new Date(ngay);
-  return Math.floor((ngay - ngayBatDau) / (1000 * 60 * 60 * 24));
+function getIndexFromDate(date, startDate) {
+  if (!(date instanceof Date)) date = new Date(date);
+  return Math.floor((date - startDate) / (1000 * 60 * 60 * 24));
 }
-function tinhViTriPixel(ngay, ngayBatDau) {
-  if (!(ngay instanceof Date)) ngay = new Date(ngay);
-  const chiSoNgay = layIndexTuNgay(ngay, ngayBatDau);
-  const gio = ngay.getHours();
-  const phut = ngay.getMinutes();
-  const giay = ngay.getSeconds();
-  let pixel = chiSoNgay * pixelMoiNgay;
-  pixel += gio * pixelMoiNgay / 24;
-  pixel += phut * pixelMoiNgay / 24 / 60;
-  pixel += giay * pixelMoiNgay / 24 / 3600;
+function calcPixelPosition(date, startDate) {
+  if (!(date instanceof Date)) date = new Date(date);
+  const dayIndex = getIndexFromDate(date, startDate);
+  const hour = date.getHours();
+  const minute = date.getMinutes();
+  const second = date.getSeconds();
+  let pixel = dayIndex * pixelsPerDay;
+  pixel += hour * pixelsPerDay / 24;
+  pixel += minute * pixelsPerDay / 24 / 60;
+  pixel += second * pixelsPerDay / 24 / 3600;
   return pixel;
 }
 
-// new helpers: lấy ranh giới ngày (bắt đầu của ngày)
-function layDauNgay(ngay) {
-  const dt = (ngay instanceof Date) ? ngay : new Date(ngay);
+// Helper: get start of day
+function getStartOfDay(date) {
+  const dt = (date instanceof Date) ? date : new Date(date);
   return new Date(dt.getFullYear(), dt.getMonth(), dt.getDate(), 0, 0, 0, 0);
 }
 
-function tinhThoiGianConLai(thoiDiemKetThuc) {
-  const bayGio = new Date();
-  const ketThuc = new Date(thoiDiemKetThuc);
-  let khoangCach = ketThuc - bayGio;
-  
-  if (khoangCach <= 0) {
-    // Tính thời gian đã kết thúc
-    khoangCach = Math.abs(khoangCach);
-    const ngay = Math.floor(khoangCach / (1000 * 60 * 60 * 24));
-    const gio = Math.floor((khoangCach % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    const phut = Math.floor((khoangCach % (1000 * 60 * 60)) / (1000 * 60));
-    
-    if (ngay > 0) {
-      return `Đã kết thúc ${ngay} ngày trước`;
-    } else if (gio > 0) {
-      return `Đã kết thúc ${gio} giờ trước`;
-    } else if (phut > 0) {
-      return `Đã kết thúc ${phut} phút trước`;
+function getTimeRemaining(endTime) {
+  const now = new Date();
+  const end = new Date(endTime);
+  let diff = end - now;
+  if (diff <= 0) {
+    // Already ended
+    diff = Math.abs(diff);
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    if (days > 0) {
+      return `${days} days ago`;
+    } else if (hours > 0) {
+      return `${hours} hours ago`;
+    } else if (minutes > 0) {
+      return `${minutes} minutes ago`;
     } else {
-      return "Vừa kết thúc";
+      return "Just ended";
     }
   }
-  
-  // Tính thời gian còn lại
-  const ngay = Math.floor(khoangCach / (1000 * 60 * 60 * 24));
-  const gio = Math.floor((khoangCach % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-  const phut = Math.floor((khoangCach % (1000 * 60 * 60)) / (1000 * 60));
-  const giay = Math.floor((khoangCach % (1000 * 60)) / 1000);
-  
-  if (ngay > 0) {
-    return `Còn lại ${ngay} ngày ${gio}h`;
+  // Still remaining
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+  const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+  const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+  if (days > 0) {
+    return `${days} days ${hours}h left`;
   }
-  return `Còn lại ${gio}h ${phut}m ${giay}s`;
+  return `${hours}h ${minutes}m ${seconds}s left`;
 }
-function dinhDangGio24h(ngay) {
-  return ngay.getHours().toString().padStart(2, '0')
-    + ':' + ngay.getMinutes().toString().padStart(2, '0')
-    + ':' + ngay.getSeconds().toString().padStart(2, '0');
+function format24h(date) {
+  return date.getHours().toString().padStart(2, '0')
+    + ':' + date.getMinutes().toString().padStart(2, '0')
+    + ':' + date.getSeconds().toString().padStart(2, '0');
 }
-function cuonDenGioHienTai(ngayBatDau) {
-  const bayGio = new Date();
-  const viTriTrai = tinhViTriPixel(bayGio, ngayBatDau);
-  khungTimeline.scrollLeft = viTriTrai - khungTimeline.clientWidth / 2 + pixelMoiNgay;
+function scrollToCurrentTime(startDate) {
+  const now = new Date();
+  const leftPos = calcPixelPosition(now, startDate);
+  timelineScrollArea.scrollLeft = leftPos - timelineScrollArea.clientWidth / 2 + pixelsPerDay;
 }
 
 // Helper: Chuyển ISO/UTC về local string cho input datetime-local (yyyy-MM-ddTHH:mm)
 function toInputDatetimeLocal(iso) {
   if (!iso) return '';
-  const d = new Date(iso);
-  const pad = n => n.toString().padStart(2, '0');
-  const yyyy = d.getFullYear();
-  const MM = pad(d.getMonth() + 1);
-  const dd = pad(d.getDate());
-  const hh = pad(d.getHours());
-  const mm = pad(d.getMinutes());
-  // Không lấy giây để tránh nhảy giây khi edit
-  return `${yyyy}-${MM}-${dd}T${hh}:${mm}`;
-}
+  function renderTimeline(events) {
+    const { startDate, endDate } = getStartEndDates();
+    const numDays = countDays(startDate, endDate);
 
-function renderTimeline(events) {
-  const { ngayBatDau, ngayKetThuc } = layNgayBatDauKetThuc();
-  const soNgay = demSoNgay(ngayBatDau, ngayKetThuc);
+    timeline.innerHTML = "";
+    timeline.style.width = (numDays * pixelsPerDay) + "px";
 
-  timeline.innerHTML = "";
-  timeline.style.width = (soNgay * pixelMoiNgay) + "px";
-
-  // --- DÒNG THÁNG ---
-  let thangHienTai = -1;
-  let thangBatDauIdx = 0;
-  for (let i = 0; i <= soNgay; i++) {
-    const ngay = layNgayTheoIndex(i, ngayBatDau);
-    if (i === soNgay || ngay.getMonth() !== thangHienTai) {
-      if (thangHienTai !== -1) {
-        // Vẽ box tháng
-        const thangBox = document.createElement('div');
-        thangBox.className = 'month-label';
-        thangBox.style.position = 'absolute';
-        thangBox.style.left = (thangBatDauIdx * pixelMoiNgay) + 'px';
-        thangBox.style.top = '-32px';
-        thangBox.style.width = ((i - thangBatDauIdx) * pixelMoiNgay) + 'px';
-        thangBox.style.height = '28px';
-        thangBox.style.lineHeight = '28px';
-        thangBox.style.textAlign = 'center';
-        thangBox.style.fontWeight = 'bold';
-        thangBox.style.fontSize = '1.1em';
-        thangBox.style.background = 'rgba(255,255,255,0.07)';
-        thangBox.style.borderRadius = '8px 8px 0 0';
-        thangBox.style.color = '#FFD600';
-        thangBox.innerText = `Tháng ${thangHienTai+1}`;
-        timeline.appendChild(thangBox);
+    // --- MONTH ROW ---
+    let currentMonth = -1;
+    let monthStartIdx = 0;
+    for (let i = 0; i <= numDays; i++) {
+      const date = getDateByIndex(i, startDate);
+      if (i === numDays || date.getMonth() !== currentMonth) {
+        if (currentMonth !== -1) {
+          // Draw month box
+          const monthBox = document.createElement('div');
+          monthBox.className = 'month-label';
+          monthBox.style.position = 'absolute';
+          monthBox.style.left = (monthStartIdx * pixelsPerDay) + 'px';
+          monthBox.style.top = '-32px';
+          monthBox.style.width = ((i - monthStartIdx) * pixelsPerDay) + 'px';
+          monthBox.style.height = '28px';
+          monthBox.style.lineHeight = '28px';
+          monthBox.style.textAlign = 'center';
+          monthBox.style.fontWeight = 'bold';
+          monthBox.style.fontSize = '1.1em';
+          monthBox.style.background = 'rgba(255,255,255,0.07)';
+          monthBox.style.borderRadius = '8px 8px 0 0';
+          monthBox.style.color = '#FFD600';
+          monthBox.innerText = `Month ${currentMonth+1}`;
+          timeline.appendChild(monthBox);
+        }
+        currentMonth = date.getMonth();
+        monthStartIdx = i;
       }
-      thangHienTai = ngay.getMonth();
-      thangBatDauIdx = i;
     }
-  }
 
-  // --- DÒNG WEEKDAY ---
-  for (let i = 0; i < soNgay; i++) {
-    const ngay = layNgayTheoIndex(i, ngayBatDau);
-    const weekday = ['CN','T2','T3','T4','T5','T6','T7'][ngay.getDay()];
-    const weekdayDiv = document.createElement('div');
-    weekdayDiv.className = 'weekday-label';
-    weekdayDiv.style.position = 'absolute';
-    weekdayDiv.style.left = (i * pixelMoiNgay - 15) + 'px';
-    weekdayDiv.style.top = '-4px';
-    weekdayDiv.style.width = '30px';
-    weekdayDiv.style.height = '20px';
-    weekdayDiv.style.textAlign = 'center';
-    weekdayDiv.style.color = '#FFD600';
-    weekdayDiv.style.fontWeight = 'bold';
-    weekdayDiv.style.fontSize = '0.95em';
-    weekdayDiv.innerText = weekday;
-    timeline.appendChild(weekdayDiv);
-  }
-
-  // --- DÒNG NGÀY ---
-  for (let i = 0; i < soNgay; i++) {
-    const ngay = layNgayTheoIndex(i, ngayBatDau);
-    // Đường kẻ dọc ngày tại đúng vị trí 0h
-    const duongKe = document.createElement('div');
-    duongKe.className = "timeline-day-line";
-    duongKe.style.position = "absolute";
-    duongKe.style.left = (i * pixelMoiNgay) + "px";
-    duongKe.style.top = "40px";
-    duongKe.style.height = "460px";
-    duongKe.style.width = "1px";
-    timeline.appendChild(duongKe);
-
-    // Số ngày nằm trên đầu đường kẻ
-    const soNgayHienThi = document.createElement('div');
-    soNgayHienThi.className = "date-col";
-    soNgayHienThi.style.position = 'absolute';
-    soNgayHienThi.style.left = (i * pixelMoiNgay - 15) + 'px'; // Canh giữa số với đường kẻ
-    soNgayHienThi.style.top = "20px";
-    soNgayHienThi.innerText = ngay.getDate();
-    timeline.appendChild(soNgayHienThi);
-  }
-
-  // Đường chỉ thời gian hiện tại (24h format)
-  function hienThiDongThoiGianHienTai() {
-    const bayGio = new Date();
-    const viTriTrai = tinhViTriPixel(bayGio, ngayBatDau);
-    let dongThoiGian = timeline.querySelector('.current-time-row');
-    if (!dongThoiGian) {
-      dongThoiGian = document.createElement('div');
-      dongThoiGian.className = "current-time-row";
-      timeline.appendChild(dongThoiGian);
+    // --- WEEKDAY ROW ---
+    const weekdayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    for (let i = 0; i < numDays; i++) {
+      const date = getDateByIndex(i, startDate);
+      const weekday = weekdayNames[date.getDay()];
+      const weekdayDiv = document.createElement('div');
+      weekdayDiv.className = 'weekday-label';
+      weekdayDiv.style.position = 'absolute';
+      weekdayDiv.style.left = (i * pixelsPerDay - 15) + 'px';
+      weekdayDiv.style.top = '-4px';
+      weekdayDiv.style.width = '30px';
+      weekdayDiv.style.height = '20px';
+      weekdayDiv.style.textAlign = 'center';
+      weekdayDiv.style.color = '#FFD600';
+      weekdayDiv.style.fontWeight = 'bold';
+      weekdayDiv.style.fontSize = '0.95em';
+      weekdayDiv.innerText = weekday;
+      timeline.appendChild(weekdayDiv);
     }
-    dongThoiGian.style.left = viTriTrai + "px";
-    dongThoiGian.style.top = "40px";
-    dongThoiGian.style.width = "2px";
-    dongThoiGian.style.height = "460px";
-    dongThoiGian.innerHTML = `<div class="current-time-line"></div>
-      <div class="current-time-label" style="top:-32px;left:-40px;">${dinhDangGio24h(bayGio)}</div>`;
-    cuonDenGioHienTai(ngayBatDau);
-  }
-  hienThiDongThoiGianHienTai();
-  if (window.__timelineTimer) clearInterval(window.__timelineTimer);
-  window.__timelineTimer = setInterval(hienThiDongThoiGianHienTai, 1000);
 
-  // Event-bar
-  timeline.querySelectorAll(".event-bar").forEach(e => e.remove());
-  document.querySelectorAll('.event-tooltip').forEach(el => el.remove());
-  events.forEach((ev, idx) => {
+    // --- DAY ROW ---
+    for (let i = 0; i < numDays; i++) {
+      const date = getDateByIndex(i, startDate);
+      // Vertical day line at 0h
+      const dayLine = document.createElement('div');
+      dayLine.className = "timeline-day-line";
+      dayLine.style.position = "absolute";
+      dayLine.style.left = (i * pixelsPerDay) + "px";
+      dayLine.style.top = "40px";
+      dayLine.style.height = "460px";
+      dayLine.style.width = "1px";
+      timeline.appendChild(dayLine);
 
-    // Chuyển đổi thời gian bắt đầu và kết thúc thành Date
-    const thoiGianBatDau = ev.startTime ? new Date(ev.startTime) : new Date(ev.start);
-    const thoiGianKetThuc = ev.endTime ? new Date(ev.endTime) : new Date(ev.end || ev.start);
+      // Day number above the line
+      const dayNum = document.createElement('div');
+      dayNum.className = "date-col";
+      dayNum.style.position = 'absolute';
+      dayNum.style.left = (i * pixelsPerDay - 15) + 'px';
+      dayNum.style.top = "20px";
+      dayNum.innerText = date.getDate();
+      timeline.appendChild(dayNum);
+    }
 
-    // Tính vị trí phần trăm timeline
-    const chiSoNgayBatDau = layIndexTuNgay(thoiGianBatDau, ngayBatDau);
-    const tyLeGioBatDau = (thoiGianBatDau.getHours() + thoiGianBatDau.getMinutes()/60 + thoiGianBatDau.getSeconds()/3600) / 24;
-    const percentBatDau = ((chiSoNgayBatDau + tyLeGioBatDau) / soNgay) * 100;
+    // Current time line (24h format)
+    function showCurrentTimeLine() {
+      const now = new Date();
+      const leftPos = calcPixelPosition(now, startDate);
+      let currentTimeRow = timeline.querySelector('.current-time-row');
+      if (!currentTimeRow) {
+        currentTimeRow = document.createElement('div');
+        currentTimeRow.className = "current-time-row";
+        timeline.appendChild(currentTimeRow);
+      }
+      currentTimeRow.style.left = leftPos + "px";
+      currentTimeRow.style.top = "40px";
+      currentTimeRow.style.width = "2px";
+      currentTimeRow.style.height = "460px";
+      currentTimeRow.innerHTML = `<div class=\"current-time-line\"></div>
+        <div class=\"current-time-label\" style=\"top:-32px;left:-40px;\">${format24h(now)}</div>`;
+      scrollToCurrentTime(startDate);
+    }
+    showCurrentTimeLine();
+    if (window.__timelineTimer) clearInterval(window.__timelineTimer);
+    window.__timelineTimer = setInterval(showCurrentTimeLine, 1000);
 
-    const chiSoNgayKetThuc = layIndexTuNgay(thoiGianKetThuc, ngayBatDau);
-    const tyLeGioKetThuc = (thoiGianKetThuc.getHours() + thoiGianKetThuc.getMinutes()/60 + thoiGianKetThuc.getSeconds()/3600) / 24;
-    const percentKetThuc = ((chiSoNgayKetThuc + tyLeGioKetThuc) / soNgay) * 100;
+    // Event-bar
+    timeline.querySelectorAll(".event-bar").forEach(e => e.remove());
+    document.querySelectorAll('.event-tooltip').forEach(el => el.remove());
+    events.forEach((ev, idx) => {
+      // Convert start and end times to Date
+      const startTime = ev.startTime ? new Date(ev.startTime) : new Date(ev.start);
+      const endTime = ev.endTime ? new Date(ev.endTime) : new Date(ev.end || ev.start);
 
-const leftPercent = Math.max(0, Math.min(percentBatDau, 100));
-const rightPercent = Math.max(0, Math.min(percentKetThuc, 100));
-const widthPercent = Math.max(rightPercent - leftPercent, (4 / (khungTimeline.clientWidth || window.innerWidth)) * 100);
+      // Calculate percent positions
+      const startDayIdx = getIndexFromDate(startTime, startDate);
+      const startHourRatio = (startTime.getHours() + startTime.getMinutes()/60 + startTime.getSeconds()/3600) / 24;
+      const percentStart = ((startDayIdx + startHourRatio) / numDays) * 100;
 
+      const endDayIdx = getIndexFromDate(endTime, startDate);
+      const endHourRatio = (endTime.getHours() + endTime.getMinutes()/60 + endTime.getSeconds()/3600) / 24;
+      const percentEnd = ((endDayIdx + endHourRatio) / numDays) * 100;
 
+      const leftPercent = Math.max(0, Math.min(percentStart, 100));
+      const rightPercent = Math.max(0, Math.min(percentEnd, 100));
+      const widthPercent = Math.max(rightPercent - leftPercent, (4 / (timelineScrollArea.clientWidth || window.innerWidth)) * 100);
 
-    // Tính vị trí 0h của ngày bắt đầu và ngày kết thúc
-    const viTri0hBatDau = Math.floor(chiSoNgayBatDau) * pixelMoiNgay;
-    const viTri0hKetThuc = Math.floor(chiSoNgayKetThuc) * pixelMoiNgay;
-    // Vị trí hiện tại (now)
-    const bayGio = new Date();
-    const viTriHienTai = tinhViTriPixel(bayGio, ngayBatDau);
+      // For debug
+      console.log('[DEBUG EVENT]', {
+        name: ev.name,
+        start: startTime.toLocaleString(),
+        end: endTime.toLocaleString(),
+        startDayIdx,
+        startHourRatio,
+        percentStart,
+        endDayIdx,
+        endHourRatio,
+        percentEnd,
+        leftPercent,
+        rightPercent,
+        widthPercent
+      });
 
-    // Log tạm thời để debug
-    console.log('[DEBUG EVENT]', {
-      name: ev.name,
-      start: thoiGianBatDau.toLocaleString(),
-      end: thoiGianKetThuc.toLocaleString(),
-      chiSoNgayBatDau,
-      tyLeGioBatDau,
-      percentBatDau,
-      chiSoNgayKetThuc,
-      tyLeGioKetThuc,
-      percentKetThuc,
-      leftPercent,
-      rightPercent,
-      widthPercent,
-      viTri0hBatDau,
-      viTri0hKetThuc,
-      viTriHienTai
+      const bar = document.createElement('div');
+      // Handle event-bar color: prefer hex, else use old class
+      let barColor = ev.color || '';
+      let isHex = /^#[0-9A-F]{6}$/i.test(barColor);
+      let barClass = '';
+      if (!isHex) {
+        barClass = barColor;
+        barColor = '';
+      }
+      bar.className = `event-bar${barClass ? ' ' + barClass : ''}`;
+      bar.style.left = leftPercent + "%";
+      bar.style.top = (60 + idx * 44) + "px";
+      bar.style.width = widthPercent + "%";
+      bar.style.height = "36px";
+      if (barColor) {
+        bar.style.background = barColor;
+        bar.style.color = '#fff';
+      }
+
+      // Content: name + time + delete button
+      bar.innerHTML = `<div class=\"event-title\">${ev.name}</div>
+        <span class=\"time-info\" style=\"margin-left:8px;font-size:0.9em;\">
+          ${startTime.getDate()}/${startTime.getMonth()+1} ${format24h(startTime)}
+          - ${endTime.getDate()}/${endTime.getMonth()+1} ${format24h(endTime)}
+        </span>
+        <button class=\"delete-btn\" onclick=\"(function(id){ return function(e){ e.stopPropagation(); if(confirm('Delete this event?')) deleteEvent(id); }} )('${ev.id}')(event)\">Delete</button>`;
+
+      // Add click event to open modal
+      bar.addEventListener('click', function() {
+        showEventModal(ev, startTime, endTime);
+      });
+
+      // Tooltip
+      const tooltip = document.createElement('div');
+      tooltip.className = "event-tooltip";
+      tooltip.style.display = "none";
+      document.body.appendChild(tooltip);
+
+      bar.onmousemove = function(e) {
+        tooltip.innerText = getTimeRemaining(endTime);
+        tooltip.style.left = (e.pageX + 12) + "px";
+        tooltip.style.top = (e.pageY - 10) + "px";
+        tooltip.style.display = "block";
+      };
+      bar.onmouseleave = function() {
+        tooltip.style.display = "none";
+      };
+
+      timeline.appendChild(bar);
     });
-
-
-    const thanh = document.createElement('div');
-    // Xử lý màu event-bar: ưu tiên mã hex, nếu không có thì dùng class màu cũ
-    let barColor = ev.color || '';
-    let isHex = /^#[0-9A-F]{6}$/i.test(barColor);
-    let barClass = '';
-    if (!isHex) {
-      barClass = barColor;
-      barColor = '';
-    }
-    thanh.className = `event-bar${barClass ? ' ' + barClass : ''}`;
-    thanh.style.left = leftPercent + "%";
-    thanh.style.top = (60 + idx * 44) + "px";
-    thanh.style.width = widthPercent + "%";
-    thanh.style.height = "36px";
-    if (barColor) {
-      thanh.style.background = barColor;
-      thanh.style.color = '#fff';
-    }
-
-    // Nội dung: tên + thời gian + nút xóa
-    thanh.innerHTML = `<div class="event-title">${ev.name}</div>
-      <span class="time-info" style="margin-left:8px;font-size:0.9em;">
-        ${thoiGianBatDau.getDate()}/${thoiGianBatDau.getMonth()+1} ${dinhDangGio24h(thoiGianBatDau)}
-        - ${thoiGianKetThuc.getDate()}/${thoiGianKetThuc.getMonth()+1} ${dinhDangGio24h(thoiGianKetThuc)}
-      </span>
-      <button class="delete-btn" onclick="(function(id){ return function(e){ e.stopPropagation(); if(confirm('Xóa sự kiện?')) deleteEvent(id); }} )('${ev.id}')(event)">Xóa</button>`;
-
-    // Thêm sự kiện click để mở modal
-    thanh.addEventListener('click', function() {
-      showEventModal(ev, thoiGianBatDau, thoiGianKetThuc);
-    });
-
-    // Tooltip
-    const nutGiup = document.createElement('div');
-    nutGiup.className = "event-tooltip";
-    nutGiup.style.display = "none";
-    document.body.appendChild(nutGiup);
-
-    thanh.onmousemove = function(e) {
-      nutGiup.innerText = tinhThoiGianConLai(thoiGianKetThuc);
+  }
       nutGiup.style.left = (e.pageX + 12) + "px";
       nutGiup.style.top = (e.pageY - 10) + "px";
       nutGiup.style.display = "block";
@@ -345,7 +328,7 @@ db.collection("events").onSnapshot(snap => {
     const endTime = data.endTime || data.end || data.start;
     if (endTime) {
       const end = new Date(endTime);
-      // Nếu đã kết thúc >24h thì chỉ ẩn khỏi giao diện, KHÔNG xóa khỏi Firestore
+      // If ended >24h ago, hide from UI only, DO NOT delete from Firestore
       if (now - end > 24 * 60 * 60 * 1000) {
         doc.ref.delete().catch(()=>{});
         return; // skip pushing this event
@@ -353,39 +336,39 @@ db.collection("events").onSnapshot(snap => {
     }
     events.push(data);
   });
-  // Hàm phân loại trạng thái sự kiện
+  // Function to classify event status
   function getEventStatus(event) {
     const now = new Date();
     const endTime = new Date(event.endTime || event.end || event.start);
     const timeLeft = endTime - now;
     
     if (timeLeft < 0) {
-      // Đã kết thúc
+      // Has ended
       return {status: 'ended', timeAgo: Math.abs(timeLeft)};
     } else {
-      // Chưa kết thúc
+      // Still active
       return {status: 'active', timeLeft: timeLeft};
     }
   }
 
-  // Sắp xếp sự kiện theo quy tắc mới
+  // Sort events by new rules
   events.sort((a, b) => {
     const statusA = getEventStatus(a);
     const statusB = getEventStatus(b);
     
-    // Nếu cả hai đều đang hoạt động
+    // If both are active
     if (statusA.status === 'active' && statusB.status === 'active') {
-      // Sắp xếp theo thời gian còn lại (ít -> nhiều)
+      // Sort by remaining time (less -> more)
       return statusA.timeLeft - statusB.timeLeft;
     }
     
-    // Nếu cả hai đều đã kết thúc
+    // If both have ended
     if (statusA.status === 'ended' && statusB.status === 'ended') {
-      // Sắp xếp theo thời gian đã kết thúc (mới kết thúc -> kết thúc lâu)
+      // Sort by end time (recently ended -> ended long ago)
       return statusA.timeAgo - statusB.timeAgo;
     }
     
-    // Sự kiện đang hoạt động luôn ở trên sự kiện đã kết thúc
+    // Active events always above ended events
     return statusA.status === 'active' ? -1 : 1;
   });
 
@@ -393,7 +376,7 @@ db.collection("events").onSnapshot(snap => {
   renderTimeline(events);
 });
 
-// Thêm hỗ trợ sửa/cancel cho form
+// Add edit/cancel support for form
 const editIdInput = document.createElement('input');
 editIdInput.type = 'hidden';
 editIdInput.id = 'editId';
@@ -413,11 +396,11 @@ cancelBtn.onclick = () => {
   document.querySelector('#eventForm button[type="submit"]').textContent = 'Thêm sự kiện';
 };
 
-// Thêm helper để set form từ event khi edit
+// Helper to set form from event when editing
 function startEditEvent(ev) {
   document.getElementById('name').value = ev.name || '';
   
-  // Xử lý màu sắc
+  // Handle color
   const colorMap = {
     red: '#d32f2f',
     yellow: '#fbc02d',
@@ -430,21 +413,21 @@ function startEditEvent(ev) {
   document.getElementById('color').value = eventColor;
   document.getElementById('colorCode').value = eventColor;
   
-  // Đảm bảo giữ nguyên giá trị thời gian
+  // Preserve time values
   const startTime = ev.startTime || ev.start;
   const endTime = ev.endTime || ev.end;
   
   if (startTime) {
     const startInput = document.getElementById('startTime');
     startInput.value = toInputDatetimeLocal(startTime);
-    // Lưu giá trị gốc để kiểm tra thay đổi
+    // Save original value for change validation
     startInput.setAttribute('data-original', startInput.value);
   }
   
   if (endTime) {
     const endInput = document.getElementById('endTime');
     endInput.value = toInputDatetimeLocal(endTime);
-    // Lưu giá trị gốc để kiểm tra thay đổi
+    // Save original value for change validation
     endInput.setAttribute('data-original', endInput.value);
   }
   
@@ -452,7 +435,7 @@ function startEditEvent(ev) {
   document.querySelector('#eventForm button[type="submit"]').textContent = 'Lưu thay đổi';
   cancelBtn.style.display = 'inline-block';
   
-  // Thêm kiểm tra khi input thay đổi
+  // Add input change validation
   ['startTime', 'endTime'].forEach(id => {
     const input = document.getElementById(id);
     input.addEventListener('change', function() {
@@ -463,7 +446,7 @@ function startEditEvent(ev) {
   });
 }
 
-// Xử lý color picker trong form thêm sự kiện
+// Handle color picker in add event form
 const addEventColorPicker = document.getElementById('color');
 const addEventColorCode = document.getElementById('colorCode');
 
