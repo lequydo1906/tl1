@@ -14,7 +14,27 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-let pixelsPerDay = Math.floor(window.innerWidth / 14);
+// Initialize to a default value, will be updated when DOM is ready
+let pixelsPerDay = 100;
+
+// Wait for DOM to be fully loaded
+document.addEventListener('DOMContentLoaded', () => {
+  console.log('DOM fully loaded');
+  // Initial setup
+  updatePixelsPerDay();
+  
+  // Update on resize
+  window.addEventListener('resize', () => {
+    updatePixelsPerDay();
+    if (window._lastEvents) {
+      renderTimeline(window._lastEvents);
+    }
+  });
+  
+  // Start listening for Firestore updates
+  console.log('Starting Firestore listener');
+  startFirestoreListener();
+});
 
 function getToday() {
   const now = new Date();
@@ -36,13 +56,16 @@ const timelineScrollArea = document.querySelector('.timeline-scroll-area');
 
 // No more resize, just update pixelsPerDay on load/resize window
 function updatePixelsPerDay() {
-  pixelsPerDay = Math.floor(timelineScrollArea.clientWidth / 14);
+  const timeline = document.querySelector('.timeline');
+  if (!timeline) {
+    console.error('Timeline element not found');
+    return;
+  }
+  const totalWidth = timeline.clientWidth;
+  const totalDays = moment(timelineEnd).diff(timelineStart, 'days');
+  console.log(`Updating pixelsPerDay: width=${totalWidth}, days=${totalDays}`);
+  pixelsPerDay = totalWidth / totalDays;
 }
-
-window.addEventListener('resize', () => {
-  updatePixelMoiNgay();
-  renderTimeline(window._lastEvents || []);
-});
 
 // Khởi tạo lại pixelMoiNgay khi load
 updatePixelMoiNgay();
@@ -117,7 +140,11 @@ function scrollToCurrentTime(startDate) {
 // Helper: Chuyển ISO/UTC về local string cho input datetime-local (yyyy-MM-ddTHH:mm)
 function toInputDatetimeLocal(iso) {
   if (!iso) return '';
-  function renderTimeline(events) {
+  const dt = new Date(iso);
+  dt.setMinutes(dt.getMinutes() - dt.getTimezoneOffset());
+  return dt.toISOString().slice(0, 16);
+}
+function renderTimeline(events) {
     const { startDate, endDate } = getStartEndDates();
     const numDays = countDays(startDate, endDate);
 
@@ -302,18 +329,7 @@ function toInputDatetimeLocal(iso) {
       };
       bar.onmouseleave = function() {
         tooltip.style.display = "none";
-      };
-
-      timeline.appendChild(bar);
-    });
-  }
-      nutGiup.style.left = (e.pageX + 12) + "px";
-      nutGiup.style.top = (e.pageY - 10) + "px";
-      nutGiup.style.display = "block";
-    };
-    thanh.onmouseleave = function() {
-      nutGiup.style.display = "none";
-    };
+}
 
     timeline.appendChild(thanh);
   });
