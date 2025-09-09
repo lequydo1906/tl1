@@ -30,70 +30,22 @@ function demSoNgay(ngayBatDau, ngayKetThuc) {
   return Math.round((ngayKetThuc - ngayBatDau) / (1000 * 60 * 60 * 24)) + 1;
 }
 
+
 const timeline = document.getElementById('timeline');
-const khungTimeline = document.getElementById('timeline-container');
+const khungTimeline = document.querySelector('.timeline-scroll-area');
 
-// Thêm tính năng resize
-let isResizing = false;
-let startX, startY, startWidth, startHeight;
-
-const resizeHandle = document.createElement('div');
-resizeHandle.id = 'resize-handle';
-resizeHandle.style.cssText = `
-  position: absolute;
-  bottom: 0;
-  right: 0;
-  width: 15px;
-  height: 15px;
-  cursor: nw-resize;
-  z-index: 1000;
-`;
-
-khungTimeline.appendChild(resizeHandle);
-
-resizeHandle.addEventListener('mousedown', initResize);
-
-function initResize(e) {
-    isResizing = true;
-    startX = e.clientX;
-    startY = e.clientY;
-    startWidth = khungTimeline.offsetWidth;
-    startHeight = khungTimeline.offsetHeight;
-
-    document.addEventListener('mousemove', resize);
-    document.addEventListener('mouseup', stopResize);
-    
-    e.preventDefault(); // Ngăn chọn text khi resize
-}
-
-function resize(e) {
-    if (!isResizing) return;
-
-    // Tính toán kích thước mới
-    const newWidth = startWidth + (e.clientX - startX);
-    const newHeight = startHeight + (e.clientY - startY);
-
-    // Cập nhật kích thước, có giới hạn min/max từ CSS
-    khungTimeline.style.width = newWidth + 'px';
-    khungTimeline.style.height = newHeight + 'px';
-    
-    // Cập nhật pixelMoiNgay dựa trên kích thước mới
-    updatePixelMoiNgay();
-    
-    // Render lại timeline
-    renderTimeline(window._lastEvents || []);
-}
-
-function stopResize() {
-    isResizing = false;
-    document.removeEventListener('mousemove', resize);
-    document.removeEventListener('mouseup', stopResize);
-}
-
+// Không còn resize, chỉ cần updatePixelMoiNgay khi load/resize window
 function updatePixelMoiNgay() {
-    // Cập nhật pixelMoiNgay dựa trên kích thước mới của container
     pixelMoiNgay = Math.floor(khungTimeline.clientWidth / 14);
 }
+
+window.addEventListener('resize', () => {
+  updatePixelMoiNgay();
+  renderTimeline(window._lastEvents || []);
+});
+
+// Khởi tạo lại pixelMoiNgay khi load
+updatePixelMoiNgay();
 
 function layNgayTheoIndex(idx, ngayBatDau) {
   return new Date(ngayBatDau.getTime() + idx * 24 * 60 * 60 * 1000);
