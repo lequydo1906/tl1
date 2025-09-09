@@ -40,12 +40,12 @@ function updatePixelsPerDay() {
 }
 
 window.addEventListener('resize', () => {
-  updatePixelMoiNgay();
+  updatePixelsPerDay();
   renderTimeline(window._lastEvents || []);
 });
 
-// Khởi tạo lại pixelMoiNgay khi load
-updatePixelMoiNgay();
+// Khởi tạo lại pixelsPerDay khi load
+updatePixelsPerDay();
 
 function getDateByIndex(idx, startDate) {
   return new Date(startDate.getTime() + idx * 24 * 60 * 60 * 1000);
@@ -117,7 +117,18 @@ function scrollToCurrentTime(startDate) {
 // Helper: Chuyển ISO/UTC về local string cho input datetime-local (yyyy-MM-ddTHH:mm)
 function toInputDatetimeLocal(iso) {
   if (!iso) return '';
-  function renderTimeline(events) {
+  const d = new Date(iso);
+  const pad = n => n.toString().padStart(2, '0');
+  const yyyy = d.getFullYear();
+  const MM = pad(d.getMonth() + 1);
+  const dd = pad(d.getDate());
+  const hh = pad(d.getHours());
+  const mm = pad(d.getMinutes());
+  // Không lấy giây để tránh nhảy giây khi edit
+  return `${yyyy}-${MM}-${dd}T${hh}:${mm}`;
+}
+
+function renderTimeline(events) {
     const { startDate, endDate } = getStartEndDates();
     const numDays = countDays(startDate, endDate);
 
@@ -257,7 +268,7 @@ function toInputDatetimeLocal(iso) {
       });
 
       const bar = document.createElement('div');
-      // Handle event-bar color: prefer hex, else use old class
+      // Xử lý màu event-bar: ưu tiên mã hex, nếu không có thì dùng class màu cũ
       let barColor = ev.color || '';
       let isHex = /^#[0-9A-F]{6}$/i.test(barColor);
       let barClass = '';
@@ -275,20 +286,20 @@ function toInputDatetimeLocal(iso) {
         bar.style.color = '#fff';
       }
 
-      // Content: name + time + delete button
-      bar.innerHTML = `<div class=\"event-title\">${ev.name}</div>
-        <span class=\"time-info\" style=\"margin-left:8px;font-size:0.9em;\">
+      // Nội dung: tên + thời gian + nút xóa
+      bar.innerHTML = `<div class="event-title">${ev.name}</div>
+        <span class="time-info" style="margin-left:8px;font-size:0.9em;">
           ${startTime.getDate()}/${startTime.getMonth()+1} ${format24h(startTime)}
           - ${endTime.getDate()}/${endTime.getMonth()+1} ${format24h(endTime)}
         </span>
-        <button class=\"delete-btn\" onclick=\"(function(id){ return function(e){ e.stopPropagation(); if(confirm('Delete this event?')) deleteEvent(id); }} )('${ev.id}')(event)\">Delete</button>`;
+        <button class="delete-btn" onclick="(function(id){ return function(e){ e.stopPropagation(); if(confirm('Xóa sự kiện?')) deleteEvent(id); }} )('${ev.id}')(event)">Xóa</button>`;
 
-      // Add click event to open modal
+      // Thêm sự kiện click để mở modal
       bar.addEventListener('click', function() {
         showEventModal(ev, startTime, endTime);
       });
 
-      // Tooltip
+      // Tooltip chuẩn
       const tooltip = document.createElement('div');
       tooltip.className = "event-tooltip";
       tooltip.style.display = "none";
@@ -307,17 +318,7 @@ function toInputDatetimeLocal(iso) {
       timeline.appendChild(bar);
     });
   }
-      nutGiup.style.left = (e.pageX + 12) + "px";
-      nutGiup.style.top = (e.pageY - 10) + "px";
-      nutGiup.style.display = "block";
-    };
-    thanh.onmouseleave = function() {
-      nutGiup.style.display = "none";
-    };
-
-    timeline.appendChild(thanh);
-  });
-}
+ 
 
 // Firestore realtime
 db.collection("events").onSnapshot(snap => {
