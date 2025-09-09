@@ -166,9 +166,18 @@ function cuonDenGioHienTai(ngayBatDau) {
   khungTimeline.scrollLeft = viTriTrai - khungTimeline.clientWidth / 2 + pixelMoiNgay;
 }
 
-// Thêm helper để format giá trị datetime-local từ ISO
+// Helper: Chuyển ISO/UTC về local string cho input datetime-local (yyyy-MM-ddTHH:mm)
 function toInputDatetimeLocal(iso) {
-	return new Date(iso).toISOString().slice(0,16);
+  if (!iso) return '';
+  const d = new Date(iso);
+  const pad = n => n.toString().padStart(2, '0');
+  const yyyy = d.getFullYear();
+  const MM = pad(d.getMonth() + 1);
+  const dd = pad(d.getDate());
+  const hh = pad(d.getHours());
+  const mm = pad(d.getMinutes());
+  // Không lấy giây để tránh nhảy giây khi edit
+  return `${yyyy}-${MM}-${dd}T${hh}:${mm}`;
 }
 
 function renderTimeline(events) {
