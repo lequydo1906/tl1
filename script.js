@@ -273,12 +273,25 @@ const widthPercent = Math.max(rightPercent - leftPercent, (4 / (khungTimeline.cl
       viTriHienTai
     });
 
+
     const thanh = document.createElement('div');
-    thanh.className = `event-bar ${ev.color || ""}`;
+    // Xử lý màu event-bar: ưu tiên mã hex, nếu không có thì dùng class màu cũ
+    let barColor = ev.color || '';
+    let isHex = /^#[0-9A-F]{6}$/i.test(barColor);
+    let barClass = '';
+    if (!isHex) {
+      barClass = barColor;
+      barColor = '';
+    }
+    thanh.className = `event-bar${barClass ? ' ' + barClass : ''}`;
     thanh.style.left = leftPercent + "%";
     thanh.style.top = (60 + idx * 44) + "px";
     thanh.style.width = widthPercent + "%";
     thanh.style.height = "36px";
+    if (barColor) {
+      thanh.style.background = barColor;
+      thanh.style.color = '#fff';
+    }
 
     // Nội dung: tên + thời gian + nút xóa
     thanh.innerHTML = `<div class="event-title">${ev.name}</div>
@@ -322,7 +335,7 @@ db.collection("events").onSnapshot(snap => {
     const endTime = data.endTime || data.end || data.start;
     if (endTime) {
       const end = new Date(endTime);
-      // Nếu đã kết thúc >24h thì xóa tự động
+      // Nếu đã kết thúc >24h thì chỉ ẩn khỏi giao diện, KHÔNG xóa khỏi Firestore
       if (now - end > 24 * 60 * 60 * 1000) {
         doc.ref.delete().catch(()=>{});
         return; // skip pushing this event
