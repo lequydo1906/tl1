@@ -19,7 +19,7 @@ let pixelsPerDay = Math.floor(window.innerWidth / 14);
 function getToday() {
   const now = new Date();
   return new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
-// ...existing code...
+}
 function getStartEndDates() {
   const today = getToday();
   const startDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 7, 0, 0, 0, 0);
@@ -40,12 +40,12 @@ function updatePixelsPerDay() {
 }
 
 window.addEventListener('resize', () => {
-  updatePixelsPerDay();
+  updatePixelMoiNgay();
   renderTimeline(window._lastEvents || []);
 });
 
-// Khởi tạo lại pixelsPerDay khi load
-updatePixelsPerDay();
+// Khởi tạo lại pixelMoiNgay khi load
+updatePixelMoiNgay();
 
 function getDateByIndex(idx, startDate) {
   return new Date(startDate.getTime() + idx * 24 * 60 * 60 * 1000);
@@ -117,16 +117,7 @@ function scrollToCurrentTime(startDate) {
 // Helper: Chuyển ISO/UTC về local string cho input datetime-local (yyyy-MM-ddTHH:mm)
 function toInputDatetimeLocal(iso) {
   if (!iso) return '';
-  const d = new Date(iso);
-  const pad = n => n.toString().padStart(2, '0');
-  const yyyy = d.getFullYear();
-  const MM = pad(d.getMonth() + 1);
-  const dd = pad(d.getDate());
-  const hh = pad(d.getHours());
-  const mm = pad(d.getMinutes());
-  // Không lấy giây để tránh nhảy giây khi edit
-  return `${yyyy}-${MM}-${dd}T${hh}:${mm}`;
-}
+  function renderTimeline(events) {
     const { startDate, endDate } = getStartEndDates();
     const numDays = countDays(startDate, endDate);
 
@@ -315,6 +306,17 @@ function toInputDatetimeLocal(iso) {
 
       timeline.appendChild(bar);
     });
+  }
+      nutGiup.style.left = (e.pageX + 12) + "px";
+      nutGiup.style.top = (e.pageY - 10) + "px";
+      nutGiup.style.display = "block";
+    };
+    thanh.onmouseleave = function() {
+      nutGiup.style.display = "none";
+    };
+
+    timeline.appendChild(thanh);
+  });
 }
 
 // Firestore realtime
