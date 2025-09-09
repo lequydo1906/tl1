@@ -135,77 +135,42 @@ function renderTimeline(events) {
     timeline.innerHTML = "";
     timeline.style.width = (numDays * pixelsPerDay) + "px";
 
-    // --- MONTH ROW ---
+    // --- MONTH HEADER ---
     let currentMonth = -1;
     let monthStartIdx = 0;
     for (let i = 0; i <= numDays; i++) {
       const date = getDateByIndex(i, startDate);
       if (i === numDays || date.getMonth() !== currentMonth) {
         if (currentMonth !== -1) {
-          // Draw month box
-          const monthBox = document.createElement('div');
-          monthBox.className = 'month-label';
-          monthBox.style.position = 'absolute';
-          monthBox.style.left = (monthStartIdx * pixelsPerDay) + 'px';
-          monthBox.style.top = '-32px';
-          monthBox.style.width = ((i - monthStartIdx) * pixelsPerDay) + 'px';
-          monthBox.style.height = '28px';
-          monthBox.style.lineHeight = '28px';
-          monthBox.style.textAlign = 'center';
-          monthBox.style.fontWeight = 'bold';
-          monthBox.style.fontSize = '1.1em';
-          monthBox.style.background = 'rgba(255,255,255,0.07)';
-          monthBox.style.borderRadius = '8px 8px 0 0';
-          monthBox.style.color = '#FFD600';
-          monthBox.innerText = `Month ${currentMonth+1}`;
-          timeline.appendChild(monthBox);
+          // Tiêu đề tháng mới
+          const monthHeader = document.createElement('div');
+          monthHeader.className = 'month-header';
+          monthHeader.style.left = (monthStartIdx * pixelsPerDay) + 'px';
+          monthHeader.style.width = ((i - monthStartIdx) * pixelsPerDay) + 'px';
+          monthHeader.innerText = `Tháng ${currentMonth+1} / ${date.getFullYear()}`;
+          timeline.appendChild(monthHeader);
         }
         currentMonth = date.getMonth();
         monthStartIdx = i;
       }
     }
 
-    // --- WEEKDAY ROW ---
-    const weekdayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    // --- DAY MARKERS & LABELS ---
+    const weekdayNames = ['CN','T2','T3','T4','T5','T6','T7'];
     for (let i = 0; i < numDays; i++) {
       const date = getDateByIndex(i, startDate);
-      const weekday = weekdayNames[date.getDay()];
-      const weekdayDiv = document.createElement('div');
-      weekdayDiv.className = 'weekday-label';
-      weekdayDiv.style.position = 'absolute';
-      weekdayDiv.style.left = (i * pixelsPerDay - 15) + 'px';
-      weekdayDiv.style.top = '-4px';
-      weekdayDiv.style.width = '30px';
-      weekdayDiv.style.height = '20px';
-      weekdayDiv.style.textAlign = 'center';
-      weekdayDiv.style.color = '#FFD600';
-      weekdayDiv.style.fontWeight = 'bold';
-      weekdayDiv.style.fontSize = '0.95em';
-      weekdayDiv.innerText = weekday;
-      timeline.appendChild(weekdayDiv);
-    }
+      // Đường kẻ dọc cho mỗi ngày
+      const dayMarker = document.createElement('div');
+      dayMarker.className = 'day-marker';
+      dayMarker.style.left = (i * pixelsPerDay) + 'px';
+      timeline.appendChild(dayMarker);
 
-    // --- DAY ROW ---
-    for (let i = 0; i < numDays; i++) {
-      const date = getDateByIndex(i, startDate);
-      // Vertical day line at 0h
-      const dayLine = document.createElement('div');
-      dayLine.className = "timeline-day-line";
-      dayLine.style.position = "absolute";
-      dayLine.style.left = (i * pixelsPerDay) + "px";
-      dayLine.style.top = "40px";
-      dayLine.style.height = "460px";
-      dayLine.style.width = "1px";
-      timeline.appendChild(dayLine);
-
-      // Day number above the line
-      const dayNum = document.createElement('div');
-      dayNum.className = "date-col";
-      dayNum.style.position = 'absolute';
-      dayNum.style.left = (i * pixelsPerDay - 15) + 'px';
-      dayNum.style.top = "20px";
-      dayNum.innerText = date.getDate();
-      timeline.appendChild(dayNum);
+      // Nhãn thứ/ngày
+      const dayLabel = document.createElement('div');
+      dayLabel.className = 'day-label';
+      dayLabel.style.left = (i * pixelsPerDay - 20) + 'px';
+      dayLabel.innerHTML = `<span class="day-of-week">${weekdayNames[date.getDay()]}</span><span class="day-number">${date.getDate()}</span>`;
+      timeline.appendChild(dayLabel);
     }
 
     // Current time line (24h format)

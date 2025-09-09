@@ -1,3 +1,41 @@
+/* Tiêu đề Tháng */
+.month-header {
+  position: absolute;
+  top: 14px;
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #f59e0b;
+  padding-left: 0.5rem;
+  white-space: nowrap;
+}
+/* Đường kẻ dọc cho mỗi ngày */
+.day-marker {
+  position: absolute;
+  top: 74px;
+  width: 1px;
+  height: calc(100% - 74px);
+  background-color: rgba(255, 255, 255, 0.1);
+  z-index: 10;
+}
+/* Nhãn chứa Thứ và Ngày */
+.day-label {
+  position: absolute;
+  top: -24px;
+  left: -20px;
+  width: 40px;
+  text-align: center;
+  background-color: #0f172a;
+  padding-bottom: 2px;
+}
+.day-label .day-of-week {
+  display: block;
+  font-size: 0.875rem;
+  color: #94a3b8;
+}
+.day-label .day-number {
+  display: block;
+  color: #e2e8f0;
+}
 #region Timeline scroll area
 .timeline-scroll-area {
   width: 100%;
