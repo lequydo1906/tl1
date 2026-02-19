@@ -8,16 +8,10 @@
 </head>
 <body>
   <div class="container">
-    <header>
-      <h1>🌳 Cây Gia Phả Gia Đình</h1>
-      <p class="subtitle">Lưu giữ và chia sẻ lịch sử gia đình Việt Nam</p>
-    </header>
-
     <div class="main-content">
       <!-- Sidebar -->
       <aside class="sidebar">
         <div class="add-member-section">
-          <h2>Thêm Thành Viên</h2>
           <form id="addMemberForm">
             <div class="form-group">
               <label for="memberName">Tên</label>
@@ -40,12 +34,11 @@
                 <option value="">-- Không có --</option>
               </select>
             </div>
-            <button type="submit" class="btn-primary">Thêm Thành Viên</button>
+            <button type="submit" class="btn-primary">Thêm</button>
           </form>
         </div>
 
         <div class="members-list-section">
-          <h2>Danh Sách Thành Viên</h2>
           <div id="membersList" class="members-list"></div>
         </div>
       </aside>
@@ -63,33 +56,6 @@
     <div class="modal-content">
       <span class="close">&times;</span>
       <div id="modalBody"></div>
-    </div>
-  </div>
-
-  <script src="script.js"></script>
-</body>
-</html>
-        <input type="hidden" id="modalEventId">
-        <label for="modalName">Tên sự kiện</label>
-        <input type="text" id="modalName" required>
-        
-        <label for="modalStartTime">Thời gian bắt đầu</label>
-        <input type="datetime-local" id="modalStartTime" required>
-        
-        <label for="modalEndTime">Thời gian kết thúc</label>
-        <input type="datetime-local" id="modalEndTime" required>
-        
-        <label for="modalColor">Màu sắc</label>
-        <div class="color-picker-group">
-          <input type="color" id="modalColor" title="Chọn màu">
-          <input type="text" id="modalColorCode" placeholder="#RRGGBB" maxlength="7">
-        </div>
-      </form>
-    </div>
-
-    <!-- Close button at bottom -->
-    <div class="button-group">
-      <button class="close-btn" onclick="closeEventModal()">Đóng</button>
     </div>
   </div>
 
