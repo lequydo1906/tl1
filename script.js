@@ -6,6 +6,7 @@ const API_URL = 'http://localhost:3000/api';
 class FamilyTree {
   constructor() {
     this.members = [];
+    this.selfId = null;
     this.loadFromServer();
   }
 
@@ -14,11 +15,24 @@ class FamilyTree {
       const response = await fetch(`${API_URL}/members`);
       if (response.ok) {
         this.members = await response.json();
+        console.log('Loaded members:', this.members);
+        // Tìm selfId từ member có isSelf = true
+        const selfMember = this.members.find(m => m.isSelf === true);
+        console.log('Self member found:', selfMember);
+        if (selfMember) {
+          this.selfId = selfMember.id;
+          localStorage.setItem('selfId', selfMember.id);
+          console.log('Self ID set to:', this.selfId);
+        } else {
+          this.selfId = localStorage.getItem('selfId');
+          console.log('Self ID from localStorage:', this.selfId);
+        }
       }
       this.init();
       this.render();
     } catch (error) {
-      console.log('Server không khả dụng, dùng chế độ offline');
+      console.log('Server không khả dụng, dùng chế độ offline', error);
+      this.selfId = localStorage.getItem('selfId');
       this.init();
       this.render();
     }
@@ -36,14 +50,15 @@ class FamilyTree {
     }
   }
 
-  addMember(name, birthYear, gender, parentId) {
+  addMember(name, birthYear, gender, parentId, isSelf = false) {
     const member = {
       id: Date.now().toString(),
       name,
       birthYear: birthYear ? parseInt(birthYear) : null,
       gender,
       parentId: parentId || null,
-      children: []
+      children: [],
+      isSelf: isSelf
     };
     this.members.push(member);
     if (parentId) {
@@ -52,12 +67,15 @@ class FamilyTree {
         parent.children.push(member.id);
       }
     }
+    if (isSelf) {
+      this.selfId = member.id;
+      localStorage.setItem('selfId', member.id);
+    }
     this.saveToServer();
     return member;
   }
 
   deleteMember(id) {
-    // Remove from parent's children
     const member = this.members.find(m => m.id === id);
     if (member && member.parentId) {
       const parent = this.members.find(m => m.id === member.parentId);
@@ -65,13 +83,30 @@ class FamilyTree {
         parent.children = parent.children.filter(cId => cId !== id);
       }
     }
-    // Remove member and its children
     this.members = this.members.filter(m => m.id !== id && m.parentId !== id);
+    if (id === this.selfId) {
+      this.selfId = null;
+      localStorage.removeItem('selfId');
+    }
     this.saveToServer();
   }
 
   getMemberById(id) {
     return this.members.find(m => m.id === id);
+  }
+
+  getSelf() {
+    // Luôn tìm từ members có isSelf = true trước
+    let self = this.members.find(m => m.isSelf === true);
+    if (self) {
+      this.selfId = self.id;
+      return self;
+    }
+    // Nếu không có, dùng selfId từ memory
+    if (this.selfId) {
+      return this.getMemberById(this.selfId);
+    }
+    return null;
   }
 
   getParents(memberId) {
@@ -99,30 +134,34 @@ class FamilyTree {
 
   init() {
     this.setupEventListeners();
-    this.render();
+    this.initDragFloatingBox();
   }
 
   setupEventListeners() {
-    document.getElementById('addMemberForm').addEventListener('submit', (e) => {
-      e.preventDefault();
-      const name = document.getElementById('memberName').value.trim();
-      const birthYear = document.getElementById('birthYear').value;
-      const gender = document.getElementById('gender').value;
-      const parentId = document.getElementById('parentSelect').value;
+    const addMemberForm = document.getElementById('addMemberForm');
+    if (addMemberForm) {
+      addMemberForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const name = document.getElementById('memberName').value.trim();
+        const birthYear = document.getElementById('birthYear').value;
+        const gender = document.getElementById('gender').value;
+        const parentId = document.getElementById('parentSelect').value;
 
-      if (name) {
-        this.addMember(name, birthYear, gender, parentId || null);
-        document.getElementById('addMemberForm').reset();
-        this.render();
-      }
-    });
+        if (name) {
+          this.addMember(name, birthYear, gender, parentId || null);
+          addMemberForm.reset();
+          this.render();
+        }
+      });
+    }
 
-    // Modal close
     const modal = document.getElementById('modal');
     const closeBtn = document.querySelector('.close');
-    closeBtn.addEventListener('click', () => {
-      modal.style.display = 'none';
-    });
+    if (closeBtn) {
+      closeBtn.addEventListener('click', () => {
+        modal.style.display = 'none';
+      });
+    }
 
     window.addEventListener('click', (e) => {
       if (e.target === modal) {
@@ -131,11 +170,180 @@ class FamilyTree {
     });
   }
 
+  showSelfForm() {
+    const modal = document.getElementById('modal');
+    const modalBody = document.getElementById('modalBody');
+    
+    modalBody.innerHTML = `
+      <h2>Thông tin bản thân</h2>
+      <form id="selfForm">
+        <div class="form-group">
+          <label for="selfName">Tên của bạn</label>
+          <input type="text" id="selfName" placeholder="Họ tên" required>
+        </div>
+        <div class="form-group">
+          <label for="selfBirthYear">Năm sinh</label>
+          <input type="number" id="selfBirthYear" placeholder="1980" min="1900">
+        </div>
+        <div class="form-group">
+          <label for="selfGender">Giới tính</label>
+          <select id="selfGender">
+            <option value="Nam">Nam</option>
+            <option value="Nữ">Nữ</option>
+          </select>
+        </div>
+        <button type="submit" class="btn-primary">Xác nhận</button>
+      </form>
+    `;
+    
+    document.getElementById('selfForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const name = document.getElementById('selfName').value.trim();
+      const birthYear = document.getElementById('selfBirthYear').value;
+      const gender = document.getElementById('selfGender').value;
+      
+      if (name) {
+        this.addMember(name, birthYear, gender, null, true);
+        modal.style.display = 'none';
+        this.render();
+      }
+    });
+    
+    modal.style.display = 'block';
+  }
+
+  renderSelfSection() {
+    const floatingBox = document.getElementById('floatingBox');
+    const selfInfoSection = document.getElementById('selfInfoSection');
+    const addMemberSection = document.getElementById('addMemberSection');
+    const debugInfo = document.getElementById('debugInfo');
+    const self = this.getSelf();
+    
+    // Update debug info
+    if (debugInfo) {
+      debugInfo.innerHTML = `
+        Members: ${this.members.length}<br>
+        SelfId: ${this.selfId}<br>
+        Self: ${self ? self.name : 'null'}
+      `;
+    }
+    
+    console.log('renderSelfSection called. Self:', self, 'SelfId:', this.selfId);
+    
+    if (!self) {
+      floatingBox.classList.remove('hidden');
+      selfInfoSection.innerHTML = '';
+      addMemberSection.style.display = 'none';
+    } else {
+      floatingBox.classList.add('hidden');
+      selfInfoSection.innerHTML = `
+        <div class="self-info-name">${self.name}</div>
+        <div class="self-info-detail">Giới tính: ${self.gender}</div>
+        ${self.birthYear ? `<div class="self-info-detail">Sinh: ${self.birthYear}</div>` : ''}
+        <button class="self-info-edit" onclick="familyTree.editSelf()" style="display: block; margin-top: 10px;">Sửa</button>
+      `;
+      addMemberSection.style.display = 'block';
+    }
+  }
+
+  editSelf() {
+    const self = this.getSelf();
+    if (!self) return;
+    
+    const modal = document.getElementById('modal');
+    const modalBody = document.getElementById('modalBody');
+    
+    modalBody.innerHTML = `
+      <h2>Chỉnh sửa thông tin</h2>
+      <form id="editSelfForm">
+        <div class="form-group">
+          <label for="editSelfName">Tên của bạn</label>
+          <input type="text" id="editSelfName" value="${self.name}" required>
+        </div>
+        <div class="form-group">
+          <label for="editSelfBirthYear">Năm sinh</label>
+          <input type="number" id="editSelfBirthYear" value="${self.birthYear || ''}" min="1900">
+        </div>
+        <div class="form-group">
+          <label for="editSelfGender">Giới tính</label>
+          <select id="editSelfGender">
+            <option value="Nam" ${self.gender === 'Nam' ? 'selected' : ''}>Nam</option>
+            <option value="Nữ" ${self.gender === 'Nữ' ? 'selected' : ''}>Nữ</option>
+          </select>
+        </div>
+        <button type="submit" class="btn-primary">Lưu</button>
+      </form>
+    `;
+    
+    document.getElementById('editSelfForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      self.name = document.getElementById('editSelfName').value.trim();
+      self.birthYear = document.getElementById('editSelfBirthYear').value ? parseInt(document.getElementById('editSelfBirthYear').value) : null;
+      self.gender = document.getElementById('editSelfGender').value;
+      
+      this.saveToServer();
+      modal.style.display = 'none';
+      this.render();
+    });
+    
+    modal.style.display = 'block';
+  }
+
+  initDragFloatingBox() {
+    const floatingBox = document.getElementById('floatingBox');
+    let isDragging = false;
+    let initialX;
+    let initialY;
+
+    floatingBox.addEventListener('dragstart', (e) => {
+      isDragging = true;
+      initialX = e.clientX - floatingBox.getBoundingClientRect().left;
+      initialY = e.clientY - floatingBox.getBoundingClientRect().top;
+      floatingBox.style.opacity = '0.7';
+    });
+
+    document.addEventListener('dragover', (e) => {
+      if (isDragging) {
+        e.preventDefault();
+      }
+    });
+
+    document.addEventListener('drop', (e) => {
+      if (isDragging) {
+        e.preventDefault();
+        const newX = e.clientX - initialX;
+        const newY = e.clientY - initialY;
+        
+        floatingBox.style.left = newX + 'px';
+        floatingBox.style.right = 'auto';
+        floatingBox.style.top = newY + 'px';
+        floatingBox.style.bottom = 'auto';
+        floatingBox.style.opacity = '1';
+        
+        isDragging = false;
+      }
+    });
+
+    floatingBox.addEventListener('dragend', () => {
+      floatingBox.style.opacity = '1';
+      isDragging = false;
+    });
+
+    floatingBox.addEventListener('click', (e) => {
+      if (!isDragging) {
+        this.showSelfForm();
+      }
+    });
+  }
+
   updateParentSelectOptions() {
     const parentSelect = document.getElementById('parentSelect');
+    if (!parentSelect) return;
+    
     const currentOptions = parentSelect.innerHTML;
     const newOptions = '<option value="">-- Không có --</option>' +
       this.members
+        .filter(m => m.id !== this.selfId)
         .map(m => `<option value="${m.id}">${m.name}</option>`)
         .join('');
     if (currentOptions !== newOptions) {
@@ -145,14 +353,21 @@ class FamilyTree {
 
   renderMembersList() {
     const membersList = document.getElementById('membersList');
-    membersList.innerHTML = this.members
+    const otherMembers = this.members.filter(m => m.id !== this.selfId);
+    
+    if (otherMembers.length === 0) {
+      membersList.innerHTML = '';
+      return;
+    }
+    
+    membersList.innerHTML = otherMembers
       .map(m => `
         <div class="member-item" onclick="familyTree.showMemberDetails('${m.id}')">
           <div class="member-item-name">${m.name}</div>
           <div class="member-item-info">
             ${m.gender} ${m.birthYear ? '• ' + m.birthYear : ''}
           </div>
-          <button class="member-item-delete" onclick="event.stopPropagation(); familyTree.deleteMember('${m.id}'); familyTree.render();">Xóa</button>
+          <button class="member-item-delete" onclick="event.stopPropagation(); familyTree.deleteMember('${m.id}'); familyTree.render();">X</button>
         </div>
       `)
       .join('');
@@ -162,23 +377,22 @@ class FamilyTree {
     const treeContainer = document.getElementById('treeContainer');
     const emptyState = document.getElementById('emptyState');
 
-    if (this.members.length === 0) {
+    const otherMembers = this.members.filter(m => m.id !== this.selfId);
+
+    if (otherMembers.length === 0) {
       treeContainer.innerHTML = '';
       emptyState.style.display = 'block';
       return;
     }
 
     emptyState.style.display = 'none';
-
-    const rootMembers = this.getRootMembers();
+    const rootMembers = otherMembers.filter(m => !m.parentId);
     let html = '';
 
-    // Nhóm các thế hệ
     html += this.renderGenerationGroup(rootMembers, 'Tổ Tiên / Ông Bà');
 
-    // Nhóm bố mẹ
     const parentsGeneration = new Set();
-    this.members.forEach(m => {
+    otherMembers.forEach(m => {
       if (m.parentId) {
         const parent = this.getMemberById(m.parentId);
         if (parent && !parent.parentId) {
@@ -191,9 +405,8 @@ class FamilyTree {
       html += this.renderGenerationGroup(Array.from(parentsGeneration), 'Bố Mẹ');
     }
 
-    // Nhóm con em / cháu
     const childrenGeneration = new Set();
-    this.members.forEach(m => {
+    otherMembers.forEach(m => {
       this.getChildren(m.id).forEach(child => childrenGeneration.add(child));
     });
 
@@ -284,6 +497,7 @@ class FamilyTree {
   }
 
   render() {
+    this.renderSelfSection();
     this.updateParentSelectOptions();
     this.renderMembersList();
     this.renderTree();

@@ -8,10 +8,23 @@
 </head>
 <body>
   <div class="container">
+    <!-- Floating Self Box -->
+    <div id="floatingBox" class="floating-box" draggable="true">
+      <div class="floating-box-header">+</div>
+      <div class="floating-box-content">Bản thân</div>
+    </div>
+
     <div class="main-content">
       <!-- Sidebar -->
       <aside class="sidebar">
-        <div class="add-member-section">
+        <div style="background: #f0f0f0; padding: 10px; border-radius: 5px; margin-bottom: 10px; font-size: 12px;">
+          <strong>Debug Info:</strong>
+          <div id="debugInfo">Loading...</div>
+        </div>
+
+        <div id="selfInfoSection" class="self-info-section"></div>
+
+        <div id="addMemberSection" class="add-member-section" style="display: none;">
           <form id="addMemberForm">
             <div class="form-group">
               <label for="memberName">Tên</label>
