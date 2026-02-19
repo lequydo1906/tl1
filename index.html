@@ -2,52 +2,73 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <title>Dòng thời gian sự kiện</title>
-  <link rel="stylesheet" href="style.css">
-  <!-- Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore-compat.js"></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cây Gia Phả Gia Đình Việt</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h1>Dòng thời gian sự kiện</h1>
-  <form id="eventForm">
-    <input type="text" id="name" placeholder="Tên sự kiện" required>
-    <!-- Luôn là kiểu 24 giờ -->
-    <input type="datetime-local" id="startTime" required>
-    <input type="datetime-local" id="endTime" required>
-    <div class="color-picker-group">
-      <input type="color" id="color" value="#d32f2f" title="Chọn màu">
-      <input type="text" id="colorCode" placeholder="#RRGGBB" maxlength="7" value="#d32f2f">
-    </div>
-    <button type="submit">Thêm sự kiện</button>
-    <!-- editId và cancel button được tạo động bởi script -->
-  </form>
-  <div class="timeline-scroll-area">
-    <div class="timeline-render">
-      <div class="timeline-inner-container">
-        <div id="timeline"></div>
-      </div>
+  <div class="container">
+    <header>
+      <h1>🌳 Cây Gia Phả Gia Đình</h1>
+      <p class="subtitle">Lưu giữ và chia sẻ lịch sử gia đình Việt Nam</p>
+    </header>
+
+    <div class="main-content">
+      <!-- Sidebar -->
+      <aside class="sidebar">
+        <div class="add-member-section">
+          <h2>Thêm Thành Viên</h2>
+          <form id="addMemberForm">
+            <div class="form-group">
+              <label for="memberName">Tên</label>
+              <input type="text" id="memberName" placeholder="Họ tên" required>
+            </div>
+            <div class="form-group">
+              <label for="birthYear">Năm sinh</label>
+              <input type="number" id="birthYear" placeholder="1980" min="1900">
+            </div>
+            <div class="form-group">
+              <label for="gender">Giới tính</label>
+              <select id="gender">
+                <option value="Nam">Nam</option>
+                <option value="Nữ">Nữ</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="parentSelect">Cha/Mẹ (nếu có)</label>
+              <select id="parentSelect">
+                <option value="">-- Không có --</option>
+              </select>
+            </div>
+            <button type="submit" class="btn-primary">Thêm Thành Viên</button>
+          </form>
+        </div>
+
+        <div class="members-list-section">
+          <h2>Danh Sách Thành Viên</h2>
+          <div id="membersList" class="members-list"></div>
+        </div>
+      </aside>
+
+      <!-- Main Tree View -->
+      <main class="tree-view">
+        <div id="treeContainer" class="tree-container"></div>
+        <p class="empty-state" id="emptyState">Chưa có thành viên. Hãy thêm thành viên đầu tiên!</p>
+      </main>
     </div>
   </div>
-  
-  <!-- Modal -->
-  <div class="modal-backdrop" id="modalBackdrop"></div>
-  <div class="event-modal" id="eventModal">
-    <div class="modal-header">
-      <h2 id="modalTitle"></h2>
-      <div class="action-btn">
-        <button class="edit-btn" id="modalEditBtn">Sửa</button>
-      </div>
+
+  <!-- Modal Xem Chi Tiết -->
+  <div id="modal" class="modal">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <div id="modalBody"></div>
     </div>
-    
-    <!-- View mode -->
-    <div class="event-details" id="modalDetails"></div>
-    <div class="time-remaining" id="modalTimeRemaining"></div>
-    
-    <!-- Edit form -->
-    <div class="event-form" id="modalForm">
-      <form id="modalEventForm">
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
         <input type="hidden" id="modalEventId">
         <label for="modalName">Tên sự kiện</label>
         <input type="text" id="modalName" required>
